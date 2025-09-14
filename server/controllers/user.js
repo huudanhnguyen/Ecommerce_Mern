@@ -1,0 +1,374 @@
+const User = require("../models/user");
+const asyncHandler = require("express-async-handler");
+const jwt = require("jsonwebtoken");
+const { generateToken, generateRefreshToken } = require("../middlewares/jwt");
+const crypto = require("crypto"); // For generating secure tokens
+const sendEmail = require("../ultils/sendMail"); // Import hàm gửi email
+const makeToken = require("uniqid");
+
+// server/controllers/user.js
+
+const register = asyncHandler(async (req, res) => {
+  const { firstname, lastname, email, password, mobile  } = req.body;
+
+  // SỬA LẠI KHỐI NÀY
+  if (!firstname || !lastname || !email || !password || !mobile) {
+    // Nếu thiếu thông tin, chỉ cần trả về response và kết thúc
+    return res.status(400).json({
+      success: false,
+      message: "All fields are required",
+    });
+  }
+
+  // Nếu không thiếu thông tin, code sẽ tiếp tục chạy xuống đây
+
+  // Kiểm tra xem email đã tồn tại chưa (logic này cần được thêm vào)
+  const userExists = await User.findOne({ email });
+  if (userExists) {
+    return res.status(400).json({
+      success: false,
+      message: "Email has already been registered",
+    });
+  }
+
+  // Nếu email chưa tồn tại, tiếp tục xử lý
+  const token = makeToken(); // Giả sử bạn có hàm này
+  res.cookie(
+    "dataRegister",
+    { ...req.body, token },
+    { httpOnly: true, maxAge: 15 * 60 * 1000 }
+  );
+
+  const html = `<p>Click <a href='${process.env.CLIENT_URL}/api/user/finalRegister/${token}'>here</a> to register your account. This link will expire in 15 minutes.</p>`;
+
+  await sendEmail({ email, html, subject: "successful to register" });
+
+  // Trả về một response thành công ở cuối
+  return res.json({
+    success: true,
+    message: "Please check your email to activate your account.",
+  });
+});
+const finalRegister = asyncHandler(async (req, res) => {
+  const cookie = req.cookies;
+  const { token } = req.params;
+  if (!cookie || cookie?.dataRegister?.token != token)
+    return res.redirect(`${process.env.CLIENT_URL}/finalRegister/failed`)
+  const newUser = await User.create({
+    email: cookie?.dataRegister?.email,
+    password: cookie?.dataRegister?.password,
+    mobile: cookie?.dataRegister?.mobile,
+    firstname: cookie?.dataRegister?.firstname,
+    lastname: cookie?.dataRegister?.lastname,
+  });
+  if(newUser) return res.redirect(`${process.env.CLIENT_URL}/finalRegister/success`)
+    else return res.redirect(`${process.env.CLIENT_URL}/finalRegister/failed`)
+});
+
+const login = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({
+      success: false,
+      message: "Email and password are required",
+    });
+  }
+  const user = await User.findOne({ email });
+  if (user && (await user.comparePassword(password))) {
+    const token = generateToken(user);
+    const refreshToken = generateRefreshToken(user);
+    // Update user's refresh token in the database
+    await User.findByIdAndUpdate(user._id, { refreshToken }, { new: true });
+    // Set the refresh token as a cookie
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // Use secure cookies in production
+      sameSite: "strict", // Prevent CSRF attacks
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+    // Return the user data and token
+    return res.status(200).json({
+      success: true,
+      message: "Login successful",
+      user: {
+        id: user._id,
+        firstname: user.firstname,
+        lastname: user.lastname,
+        email: user.email,
+        mobile: user.mobile,
+        token: token,
+        role: user.role, // Include role if needed
+      },
+    });
+  } else {
+    return res.status(401).json({
+      success: false,
+      message: "Invalid email or password",
+    });
+  }
+});
+
+const getUserProfile = asyncHandler(async (req, res) => {
+  console.log("USER INFO FROM TOKEN:", req.user);
+  const userID = req.user;
+  const user = await User.findById(userID).select(
+    "-password -refreshToken -role"
+  );
+
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found",
+    });
+  }
+
+  return res.status(200).json({
+    success: true,
+    user,
+  });
+});
+
+const refreshAccessToken = asyncHandler(async (req, res) => {
+  const cookies = req.cookies;
+  if (!cookies?.refreshToken) throw new Error("No refresh token in cookies");
+
+  // Bước 1: Xác thực refreshToken
+  jwt.verify(
+    cookies.refreshToken,
+    process.env.JWT_REFRESH_SECRET,
+    async (err, decode) => {
+      if (err) {
+        return res
+          .status(401)
+          .json({
+            success: false,
+            message: "Invalid or expired refresh token.",
+          });
+      }
+
+      // ---- BƯỚC CẢI THIỆN: KIỂM TRA USER CÓ TỒN TẠI KHÔNG ----
+      // Dùng ID đã giải mã để tìm user TRƯỚC KHI tạo token mới
+      const user = await User.findById(decode.id);
+
+      if (!user) {
+        // Nếu không tìm thấy, từ chối tạo token mới và có thể xóa cookie rác
+        res.clearCookie("refreshToken", { httpOnly: true, secure: true });
+        return res
+          .status(401)
+          .json({
+            success: false,
+            message: "User for this token no longer exists.",
+          });
+      }
+      // ---------------------------------------------------------
+
+      // Nếu user tồn tại, mới tạo accessToken mới
+      const newAccessToken = generateToken(user);
+
+      return res.status(200).json({
+        success: true,
+        newAccessToken: newAccessToken,
+      });
+    }
+  );
+});
+const logout = asyncHandler(async (req, res) => {
+  const cookies = req.cookies;
+  if (!cookies?.refreshToken) {
+    return res
+      .status(204)
+      .json({ success: true, message: "No refresh token in cookies" });
+  }
+
+  // Xóa refresh token khỏi cookie
+  res.clearCookie("refreshToken", { httpOnly: true, secure: true });
+
+  // Cập nhật user để xóa refresh token trong cơ sở dữ liệu
+  await User.findOneAndUpdate(
+    { refreshToken: cookies.refreshToken },
+    { refreshToken: null }
+  );
+
+  return res.status(200).json({ success: true, message: "Logout successful" });
+});
+// FORGOT PASSWORD
+const forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.query;
+  if (!email) {
+    return res.status(400).json({ success: false, message: "Email is required" });
+  }
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    return res.status(200).json({
+      success: true,
+      message: "If an account with this email exists, a password reset link has been sent.",
+    });
+  }
+
+  const resetToken = user.createPasswordResetToken();
+  await user.save({ validateBeforeSave: false });
+
+  const resetLink = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+  const html = `<p>Click <a href='${resetLink}'>here</a> to reset your password. This link will expire in 10 minutes.</p>`;
+
+  const emailSent = await sendEmail({ email, html, subject: "Forgot Password" });
+
+  if (emailSent) {
+    return res.status(200).json({
+      success: true,
+      message: "Password reset link sent to your email",
+    });
+  } else {
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+    return res.status(500).json({
+      success: false,
+      message: "Failed to send email. Please try again later.",
+    });
+  }
+});
+// RESET PASSWORD
+const resetPassword = asyncHandler(async (req, res) => {
+  const { password } = req.body;
+  const { token } = req.params;
+
+  if (!password || !token) {
+    return res.status(400).json({ success: false, message: "Missing inputs" });
+  }
+
+  const passwordResetToken = crypto
+    .createHash("sha256")
+    .update(token)
+    .digest("hex");
+
+  const user = await User.findOne({
+    passwordResetToken,
+    passwordResetExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid or expired reset token",
+    });
+  }
+
+  user.password = password;
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+  await user.save();
+
+  return res.json({
+    success: true,
+    message: "Password has been reset successfully.",
+  });
+});
+const getUsers = asyncHandler(async (req, res) => {
+  const users = await User.find().select("-password -refreshToken -role");
+  if (!users) {
+    return res.status(404).json({
+      success: false,
+      message: "No users found",
+    });
+  }
+  return res.status(200).json({
+    success: true,
+    users,
+  });
+});
+const deleteUser = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  if (!id) {
+    return res.status(400).json({
+      success: false,
+      message: "User ID is required",
+    });
+  }
+  const user = await User.findByIdAndDelete(id);
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found",
+    });
+  }
+  return res.status(200).json({
+    success: true,
+    message: "User deleted successfully",
+  });
+});
+const updateUser = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { firstname, lastname, email, mobile } = req.body;
+
+  if (!id || !firstname || !lastname || !email || !mobile) {
+    return res.status(400).json({
+      success: false,
+      message: "All fields are required",
+    });
+  }
+
+  const updatedUser = await User.findByIdAndUpdate(
+    id,
+    { firstname, lastname, email, mobile },
+    { new: true, runValidators: true }
+  );
+
+  if (!updatedUser) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found",
+    });
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: "User updated successfully",
+    user: updatedUser,
+  });
+});
+const updateUserbyAdmin = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { firstname, lastname, email, mobile, role } = req.body;
+
+  if (!id || !firstname || !lastname || !email || !mobile || !role) {
+    return res.status(400).json({
+      success: false,
+      message: "All fields are required",
+    });
+  }
+
+  const updatedUser = await User.findByIdAndUpdate(
+    id,
+    { firstname, lastname, email, mobile, role },
+    { new: true, runValidators: true }
+  );
+
+  if (!updatedUser) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found",
+    });
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: "User updated successfully",
+    user: updatedUser,
+  });
+});
+module.exports = {
+  register,
+  login,
+  getUserProfile,
+  refreshAccessToken,
+  logout,
+  forgotPassword,
+  resetPassword,
+  getUsers,
+  deleteUser,
+  updateUser,
+  updateUserbyAdmin,
+  finalRegister,
+};

@@ -1,0 +1,95 @@
+const Product = require('../models/product');
+const ProductCategory = require('../models/productCategory');
+const slugify = require('slugify');
+const data = require('../../data/data.js'); // Đảm bảo đường dẫn này đúng
+const cateBrandData  = require('../../data/cate-brand.js');
+const asyncHandler = require('express-async-handler');
+
+
+// Hàm fn sẽ nhận vào một 'item' (sản phẩm thực sự) và 'categoryName'
+const fn = asyncHandler(async (item, categoryName) => {
+    // 1. LÀM SẠCH GIÁ
+    const cleanedPrice = item.price ? Number(item.price.replace(/[^0-9]/g, '')) : 0;
+
+    // 2. XỬ LÝ BIẾN THỂ (VARIANTS)
+    const variants = item.variants && Array.isArray(item.variants) ? item.variants : [];
+
+    // Nếu bạn vẫn muốn có "color chính" để hiển thị mặc định
+    const colorVariant = variants.find(v => v.label === 'Color');
+    const colors = colorVariant ? colorVariant.variants : ['Default Color'];
+    // 3. TẠO MÔ TẢ (DESCRIPTION)
+    const description = [];
+    if (item.description && Array.isArray(item.description)) {
+        description.push(...item.description);
+    }
+    // Chuyển đối tượng informations thành các chuỗi "key: value" có nghĩa hơn
+    if (item.informations) {
+        description.push(...Object.entries(item.informations).map(([key, value]) => `${key}: ${value.trim()}`));
+    }
+    // Thêm các thông số kỹ thuật khác vào description nếu muốn
+    if (item.thumb) description.push(`Thumbnail: ${item.thumb}`);
+    let finalCategory;
+    if (item.category && Array.isArray(item.category) && item.category.length > 0) {
+        // Lấy phần tử cuối cùng trong mảng làm category chính
+        finalCategory = item.category[item.category.length - 1];
+    } else {
+        // Nếu item không có category, dùng categoryName từ đối tượng cha làm dự phòng
+        finalCategory = categoryName || 'Uncategorized';
+    }
+    // 4. SỬA LỖI VALIDATION VÀ TẠO SẢN PHẨM
+    await Product.create({
+        title: item.name,
+        slug: slugify(item.name) + '-' + Math.round(Math.random() * 10000),
+        description: description,
+        price: cleanedPrice,
+        brand: item.brand,
+        category: finalCategory,
+        quantity: Math.round(Math.random() * 50 + 50),
+        sold: Math.round(Math.random() * 40),
+        images: item.images,
+        color: colors[0],   // vẫn giữ màu đầu tiên cho UI cũ
+        variants: variants,  // lưu toàn bộ mảng variants
+        thumb: item.thumb || (item.images && item.images.length > 0 ? item.images[0] : ''),
+        totalRating: parseFloat((Math.random() * (5 - 3.5) + 3.5).toFixed(1)),
+        infomations: item.infomations || {}
+    });
+});
+
+const insertProduct = asyncHandler(async (req, res) => {
+    const promises = [];
+    // LOGIC ĐÚNG: Dùng vòng lặp lồng nhau
+    for (const category of data) {
+        // Nếu categoryName rỗng, gán một giá trị mặc định
+        const currentCategoryName = category.categoryName || 'Uncategorized';
+        for (const item of category.items) {
+            // Gọi hàm fn với đối tượng sản phẩm 'item' và tên category đã được chuẩn hóa
+            promises.push(fn(item, currentCategoryName));
+        }
+    }
+    await Promise.all(promises);
+    return res.json('Done inserting all products!');
+});
+const insertProductCategory = asyncHandler(async (req, res) => {
+    const promises = [];
+    for (const cate of cateBrandData) {
+        promises.push(ProductCategory.findOneAndUpdate(
+            { title: cate.cate },
+            {
+                $set: {
+                    title: cate.cate,
+                    brand: cate.brand,
+                    img: cate.img,
+                }
+            },
+            { upsert: true }
+        ));
+    }
+
+    await Promise.all(promises);
+    return res.json('Product categories have been created or updated!');
+});
+
+module.exports = {
+    insertProduct,
+    insertProductCategory
+};
