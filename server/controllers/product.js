@@ -86,62 +86,96 @@ const getProduct = asyncHandler(async (req, res) => {
     });
 });
 const getAllProducts = asyncHandler(async (req, res) => {
-   const queries = {...req.query}
-   const excludedFields = ['page', 'sort', 'limit', 'fields'];
-    excludedFields.forEach(el => delete queries[el]);
+    try {
+        const queries = { ...req.query };
+        const excludedFields = ['page', 'sort', 'limit', 'fields'];
+        excludedFields.forEach(el => delete queries[el]);
 
-    const finalQuery = {};
-    if (Object.keys(queries).length > 0) {
-        let queryStr = JSON.stringify(queries);
-        queryStr = queryStr.replace(/\b(gte|gt|lt|lte)\b/g, match => `$${match}`);
-        const parsedQuery = JSON.parse(queryStr);
-        const numericFields = ['price', 'ratings'];
-        for (const key in parsedQuery) {
-            if (numericFields.includes(key)) {
-                for (const operator in parsedQuery[key]) {
-                    if (operator.startsWith('$')) {parsedQuery[key][operator] = parseFloat(parsedQuery[key][operator]);}
+        const finalQuery = {};
+
+        // --- 1. Filter by keyword ---
+        if (queries.title) {
+            finalQuery.title = { $regex: queries.title, $options: 'i' };
+            delete queries.title;
+        }
+        if (queries.brand) {
+            finalQuery.brand = { $regex: queries.brand, $options: 'i' };
+            delete queries.brand;
+        }
+
+        // --- 2. Numeric filters (price, totalRating, etc.) ---
+        if (queries.price || queries.totalRating) {
+            let queryStr = JSON.stringify(queries);
+            queryStr = queryStr.replace(/\b(gte|gt|lt|lte)\b/g, match => `$${match}`);
+            const parsedQuery = JSON.parse(queryStr);
+
+            const numericFields = ['price', 'totalRating'];
+            for (const key in parsedQuery) {
+                if (numericFields.includes(key)) {
+                    for (const operator in parsedQuery[key]) {
+                        if (operator.startsWith('$')) {
+                            parsedQuery[key][operator] = parseFloat(parsedQuery[key][operator]);
+                        }
+                    }
+                    finalQuery[key] = parsedQuery[key];
                 }
             }
         }
-        Object.assign(finalQuery, parsedQuery);
-    }
-    if (queries.title) {finalQuery.title = { $regex: queries.title, $options: 'i' };}
-    if (queries.brand) {finalQuery.brand = { $regex: queries.brand, $options: 'i' };}
-    let queryCommand = Product.find(finalQuery).populate('category', 'title _id');
-    //sorting
-    if (req.query.sort) {
-        const sortBy = req.query.sort.split(',').join(' ');
-        queryCommand = queryCommand.sort(sortBy);
-    } else {
-        queryCommand = queryCommand.sort('-createdAt');
-    }
 
-    // field limiting
-    if (req.query.fields) {
-        const fields = req.query.fields.split(',').join(' ');
-        queryCommand = queryCommand.select(fields);
-    } else {
-        queryCommand = queryCommand.select('-__v');
+        // --- 3. Variants filter (Color, Size, RAM, etc.) ---
+        if (queries.color) {
+            finalQuery.variants = { $elemMatch: { label: "Color", variants: queries.color } };
+        }
+        if (queries.size) {
+            finalQuery.variants = { $elemMatch: { label: "Size", variants: queries.size } };
+        }
+        if (queries.ram) {
+            finalQuery.variants = { $elemMatch: { label: "RAM", variants: queries.ram } };
+        }
+
+        // --- 4. Query build ---
+        let queryCommand = Product.find(finalQuery).populate('category', 'title _id');
+
+        // Sorting
+        if (req.query.sort) {
+            const sortBy = req.query.sort.split(',').join(' ');
+            queryCommand = queryCommand.sort(sortBy);
+        } else {
+            queryCommand = queryCommand.sort('-createdAt');
+        }
+
+        // Field limiting
+        if (req.query.fields) {
+            const fields = req.query.fields.split(',').join(' ');
+            queryCommand = queryCommand.select(fields);
+        } else {
+            queryCommand = queryCommand.select('-__v');
+        }
+
+        // Pagination
+        const page = +req.query.page || 1;
+        const limit = +req.query.limit || 10;
+        const skip = (page - 1) * limit;
+        queryCommand = queryCommand.skip(skip).limit(limit);
+
+        // Execute query
+        const response = await queryCommand.exec();
+        const counts = await Product.countDocuments(finalQuery);
+
+        return res.status(200).json({
+            success: response.length > 0,
+            message: response.length > 0 ? 'Products fetched successfully' : 'No products found',
+            totalCount: counts,
+            currentPage: page,
+            totalPages: Math.ceil(counts / limit),
+            products: response,
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ success: false, message: 'Server error' });
     }
-
-    // pagination
-    const page = +(req.query.page) || 1;
-    const limit = +(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
-    queryCommand = queryCommand.skip(skip).limit(limit);
-
-    // execute the query
-    const response = await queryCommand.exec();
-    const counts = await Product.countDocuments(finalQuery);
-    return res.status(200).json({
-    success: response.length > 0,
-    message: response.length > 0 ? 'Products fetched successfully' : 'No products found',
-    totalCount: counts,
-    currentPage: page,
-    totalPages: Math.ceil(counts / limit),
-    products: response,
-    });
 });
+
 const deleteProduct = asyncHandler(async (req, res) => {
     const product = await Product.findByIdAndDelete(req.params.id);
     if (!product) {
