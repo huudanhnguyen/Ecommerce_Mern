@@ -14,7 +14,7 @@ export {default as NewArrivals} from './NewArrivals';
 export {default as HotCollections} from './HotCollections';
 export {default as BlogPost} from './BlogPost';
 export {default as Footer} from './Footer';
-export {default as FoSidebarFilteroter} from './SidebarFilter';
+export {default as ProductFilter} from './ProductFilter';
 export {default as Pagination} from './Pagination';
 
 

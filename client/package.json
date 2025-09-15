@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
+    "@headlessui/react": "^2.2.8",
     "@reduxjs/toolkit": "^2.2.3",
     "axios": "^1.11.0",
     "lucide-react": "^0.542.0",
