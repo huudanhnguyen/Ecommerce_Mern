@@ -15,12 +15,11 @@ import FAQs from "./pages/public/FAQs";
 import OurServices from "./pages/public/OurServices";
 import ForgotPassword from "./pages/public/ForgotPassword";
 import ResetPassword from "./pages/public/ResetPassword";
+import SearchResult from "./pages/public/SearchResult";
 import MyAccount from "./pages/member/MyAccount";
 import Profile from "./pages/member/Profile";
 import Orders from "./pages/member/Orders";
 import Wishlist from "./pages/member/Wishlist";
-
-
 
 function App() {
   return (
@@ -41,6 +40,7 @@ function App() {
         <Route path={path.BLOGS} element={<Blogs />} />
         <Route path={path.OUR_SERVICES} element={<OurServices />} />
         <Route path={path.FAQs} element={<FAQs />} />
+        <Route path="/search" element={<SearchResult />} />
 
         {/* nested routes cho MyAccount */}
         <Route path="my-account" element={<MyAccount />}>

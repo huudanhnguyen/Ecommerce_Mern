@@ -22,7 +22,7 @@ const path = {
   NOT_FOUND: "*",
   VERIFY_EMAIL: "finalRegister/:token",
 VERIFY_PENDING: "verify-pending",
-CART_SIDEBAR:""
+CART_SIDEBAR:"",
 
 };
 
