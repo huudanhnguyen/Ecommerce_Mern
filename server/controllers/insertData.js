@@ -79,6 +79,7 @@ const insertProductCategory = asyncHandler(async (req, res) => {
                     title: cate.cate,
                     brand: cate.brand,
                     img: cate.img,
+                    slug: cate.slug
                 }
             },
             { upsert: true }
