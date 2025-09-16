@@ -112,6 +112,10 @@ const getAllProducts = async (req, res) => {
         console.warn("⚠️ Không tìm thấy category:", queries.category);
       }
     }
+     //Search theo title
+    if (queries.title) {
+      query.title = { $regex: queries.title, $options: "i" };
+    }
 
     // Color / Size filter (map vào variants)
     if (queries.color) {
