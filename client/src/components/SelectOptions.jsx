@@ -4,14 +4,27 @@ import { FaHeart } from "react-icons/fa";
 import { useWishlist } from "../context/WishlistContext";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useSelector } from "react-redux";   // ✅ thêm
+import { useNavigate } from "react-router-dom"; // ✅ thêm
 
 const SelectOptions = ({ onQuickView, productData }) => {
   const { addToWishlist, wishlistItems, removeFromWishlist } = useWishlist();
+  const isLoggedIn = useSelector((state) => state.user.isLoggedIn); // ✅ check từ Redux
+  const navigate = useNavigate();
 
   // Kiểm tra sản phẩm đã trong danh sách yêu thích chưa
   const exists = wishlistItems.some((it) => it._id === productData._id);
 
   const handleWishlistClick = () => {
+    if (!isLoggedIn) {
+      toast.warn("Please log in to use this feature!", {
+        position: "top-center",
+        autoClose: 2000,
+      });
+      navigate("/login");
+      return;
+    }
+
     if (exists) {
       removeFromWishlist(productData._id);
       toast.info("❌ Removed from favorites list");

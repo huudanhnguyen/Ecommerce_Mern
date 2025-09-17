@@ -1,12 +1,17 @@
+// src/components/Product.jsx
 import React from "react";
-import { formatPrice, renderRatingStars, createSlug  } from "../utils/helpers";
+import { formatPrice, renderRatingStars, createSlug } from "../utils/helpers";
 import SelectOptions from "./SelectOptions";
 import { Link } from "react-router-dom";
 import path from "../utils/path";
 
 const Product = ({ productData, label, onQuickView }) => {
   if (!productData) return null;
-  const detailUrl = `/${path.DETAIL_PRODUCT}/${productData._id}/${createSlug(productData.title)}`;
+
+  const detailUrl = `/${path.DETAIL_PRODUCT}/${productData._id}/${createSlug(
+    productData.title
+  )}`;
+
   const imageUrl =
     productData?.thumb ||
     (productData?.images && productData.images.length > 0
@@ -14,14 +19,20 @@ const Product = ({ productData, label, onQuickView }) => {
       : "https://via.placeholder.com/300");
 
   const productName = productData?.name || productData?.title || "No name";
-
   const labelColor = label === "TRENDING" ? "bg-blue-500" : "bg-orange-500";
+
+  // ✅ Khi click vào sản phẩm thì cuộn lên đầu trang
+  const handleClick = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
     <div className="w-full border rounded-md overflow-hidden relative group text-center">
       {/* --- Phần hình ảnh --- */}
       <Link
         className="w-full h-[250px] overflow-hidden"
-        to={`/${path.DETAIL_PRODUCT}/${productData._id}/${productData.slug}`}
+        to={detailUrl}
+        onClick={handleClick}
       >
         <img
           src={imageUrl}
@@ -46,7 +57,8 @@ const Product = ({ productData, label, onQuickView }) => {
       <div className="p-4">
         <Link
           className="text-lg font-semibold truncate"
-          to={`/${path.DETAIL_PRODUCT}/${productData._id}/${productData.slug}`}
+          to={detailUrl}
+          onClick={handleClick}
         >
           {productName}
         </Link>

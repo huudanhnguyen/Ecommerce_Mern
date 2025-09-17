@@ -1,10 +1,12 @@
 // src/pages/public/DetailProduct.jsx
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom"; // ✅ Import useNavigate
 import { getProductById } from "../../apis/product";
 import { formatPrice, renderRatingStars } from "../../utils/helpers";
 import Breadcrumb from "../../components/Breadcrumb";
 import { useWishlist } from "../../context/WishlistContext";
+import { useCart } from "../../context/CartContext";
+import { useSelector } from "react-redux";
 
 import {
   FaShieldAlt,
@@ -18,7 +20,6 @@ import {
   FaMinus,
   FaPlus,
 } from "react-icons/fa";
-import { useCart } from "../../context/CartContext";
 import ProductSlider from "../../components/ProductSlider";
 
 // ✅ import toast
@@ -26,11 +27,15 @@ import { toast } from "react-toastify";
 
 const DetailProduct = () => {
   const { pid } = useParams();
+  const navigate = useNavigate(); // ✅ Khởi tạo useNavigate
   const [product, setProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [mainImage, setMainImage] = useState(null);
   const { wishlistItems, addToWishlist, removeFromWishlist } = useWishlist();
   const { addToCart } = useCart();
+
+    // ✅ Lấy trạng thái đăng nhập từ Redux
+  const isLoggedIn = useSelector((state) => state.user.isLoggedIn);
 
   // Kiểm tra sản phẩm có trong wishlist không
   const isInWishlist = product
@@ -67,6 +72,18 @@ const DetailProduct = () => {
 
           setProduct({ ...data, allImages: allImgs });
           setMainImage(allImgs[0]);
+
+          // Khởi tạo selectedVariants nếu có biến thể
+          if (data.variants && data.variants.length > 0) {
+            const initialVariants = {};
+            data.variants.forEach(v => {
+              if (v.variants && v.variants.length > 0) {
+                // Chọn mặc định biến thể đầu tiên của mỗi loại
+                initialVariants[v.label] = v.variants[0]; 
+              }
+            });
+            setSelectedVariants(initialVariants);
+          }
         }
       } catch (error) {
         console.error("Lỗi fetch sản phẩm:", error);
@@ -92,37 +109,58 @@ const DetailProduct = () => {
     }));
   };
 
+  // HÀM KIỂM TRA ĐĂNG NHẬP RIÊNG
+  const checkLoginAndPerformAction = (action) => {
+    if (isLoggedIn) {
+      action(); // Nếu đã đăng nhập, thực hiện hành động
+    } else {
+      toast.warn("Please log in to use this feature!", {
+        position: "top-center",
+        autoClose: 2000,
+      });
+      navigate("/login");
+    }
+  };
+
   const handleAddToCart = () => {
     if (!product) return;
-    addToCart(
-      {
-        _id: product._id,
-        title: product.title,
-        price: product.price,
-        thumb: product.thumb,
-      },
-      quantity,
-      selectedVariants
-    );
-    toast.success("🛒 Added to cart!", {
-      position: "top-left",
+    
+    // ✅ Gọi hàm kiểm tra trước khi thêm vào giỏ hàng
+    checkLoginAndPerformAction(() => {
+      addToCart(
+        {
+          _id: product._id,
+          title: product.title,
+          price: product.price,
+          thumb: product.thumb,
+        },
+        quantity,
+        selectedVariants
+      );
+      toast.success("🛒 Added to cart!", {
+        position: "top-left",
+      });
     });
   };
 
   const handleToggleWishlist = () => {
     if (!product) return;
-    if (isInWishlist) {
-      removeFromWishlist(product._id);
-      toast.info("❌ Removed from favorites list");
-    } else {
-      addToWishlist({
-        _id: product._id,
-        title: product.title,
-        price: product.price,
-        thumb: product.thumb,
-      });
-      toast.success("❤️ Added to favorites list");
-    }
+
+    // ✅ Gọi hàm kiểm tra trước khi thêm/bỏ khỏi danh sách yêu thích
+    checkLoginAndPerformAction(() => {
+      if (isInWishlist) {
+        removeFromWishlist(product._id);
+        toast.info("❌ Removed from favorites list");
+      } else {
+        addToWishlist({
+          _id: product._id,
+          title: product.title,
+          price: product.price,
+          thumb: product.thumb,
+        });
+        toast.success("❤️ Added to favorites list");
+      }
+    });
   };
 
   const isVariantSelected =
@@ -278,7 +316,7 @@ const DetailProduct = () => {
           <div className="flex gap-3">
             {/* Add to Cart */}
             <button
-              onClick={handleAddToCart}
+              onClick={handleAddToCart} // Đã đổi
               disabled={!isVariantSelected}
               className={`flex-1 flex items-center justify-center gap-2 font-bold py-3 rounded-md transition-colors
       ${
@@ -292,7 +330,7 @@ const DetailProduct = () => {
 
             {/* Add/Remove Wishlist */}
             <button
-              onClick={handleToggleWishlist}
+              onClick={handleToggleWishlist} // Đã đổi
               className={`flex-1 flex items-center justify-center gap-2 font-bold py-3 rounded-md transition-colors
       ${
         isInWishlist
@@ -384,11 +422,11 @@ const DetailProduct = () => {
       {/* --- Other Customers Also Buy --- */}
       <div className="mt-16">
         {product?.category && (
-          <ProductSlider
-            title="Other Customers Also Buy"
-            apiParams={{ category: product.category, limit: 10 }}
-            excludeId={product._id}
-          />
+<ProductSlider
+  title="Other Customers Also Buy"
+  apiParams={{ category: product.category.slug, limit: 10 }}
+  excludeId={product._id}
+/>
         )}
       </div>
     </div>

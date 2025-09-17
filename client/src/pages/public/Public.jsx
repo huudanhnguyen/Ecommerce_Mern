@@ -5,12 +5,15 @@ import { Header, Navigation, TopHeader, Footer } from "../../components";
 import CartSidebar from "../public/CartSidebar";
 import { CartProvider } from "../../context/CartContext";
 import { WishlistProvider } from "../../context/WishlistContext";
+import { AuthProvider } from '../../context/AuthContext';
 // ✅ Toast
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+
 const Public = () => {
   return (
+     <AuthProvider>
     <CartProvider>
       <WishlistProvider>
         <div className="w-full flex flex-col items-center">
@@ -33,6 +36,7 @@ const Public = () => {
         </div>
       </WishlistProvider>
     </CartProvider>
+    </AuthProvider>
   );
 };
 

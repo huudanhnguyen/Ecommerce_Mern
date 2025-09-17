@@ -4,7 +4,7 @@ import Slider from "react-slick";
 import { getAllProducts } from "../apis/product";
 import Product from "./Product";
 import QuickViewModal from "./QuickViewModal";
-import { getProductLabel } from "../utils/helpers"; // ✅ import từ utils
+import { getProductLabel } from "../utils/helpers";
 
 const ProductSlider = ({ title, apiParams = {}, excludeId = null }) => {
   const [products, setProducts] = useState([]);
@@ -18,13 +18,16 @@ const ProductSlider = ({ title, apiParams = {}, excludeId = null }) => {
         const response = await getAllProducts(apiParams);
         if (response?.data?.success) {
           let fetched = response.data.products;
+
+          // bỏ sản phẩm đang xem
           if (excludeId) {
             fetched = fetched.filter((p) => p._id !== excludeId);
           }
+
           setProducts(fetched);
         }
       } catch (error) {
-        console.error("Lỗi fetch products:", error);
+        console.error("❌ Lỗi fetch products:", error);
       }
     };
     fetchProducts();
@@ -52,17 +55,19 @@ const ProductSlider = ({ title, apiParams = {}, excludeId = null }) => {
   return (
     products?.length > 0 && (
       <div className="w-full mt-10">
+        {/* Tiêu đề */}
         <div className="py-4 border-b-2 border-main">
           <h3 className="text-xl font-semibold uppercase">{title}</h3>
         </div>
 
+        {/* Slider */}
         <div className="mt-4 mx-[-10px] relative custom-slick">
           <Slider ref={sliderRef} {...sliderSettings}>
             {products.map((product) => (
               <div key={product._id} className="px-2">
                 <Product
                   productData={product}
-                  label={getProductLabel(product)} // ✅ dùng helper
+                  label={getProductLabel(product)}
                   onQuickView={handleQuickView}
                 />
               </div>
@@ -83,6 +88,7 @@ const ProductSlider = ({ title, apiParams = {}, excludeId = null }) => {
           </button>
         </div>
 
+        {/* QuickView Modal */}
         {showModal &&
           modalData &&
           ReactDOM.createPortal(

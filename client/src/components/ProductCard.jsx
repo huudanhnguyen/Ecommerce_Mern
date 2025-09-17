@@ -2,11 +2,12 @@
 import React from "react";
 import { formatPrice, renderRatingStars } from "../utils/helpers.jsx";
 import { FaHeart } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; // ✅ thêm useNavigate
 import path from "../utils/path";
 import { useWishlist } from "../context/WishlistContext";
-import { toast } from "react-toastify"; // ✅ import toastify
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useSelector } from "react-redux"; // ✅ thêm redux
 
 const ProductCard = ({ productData }) => {
   if (!productData) return null;
@@ -21,12 +22,23 @@ const ProductCard = ({ productData }) => {
 
   // ✅ Lấy context wishlist
   const { addToWishlist, wishlistItems, removeFromWishlist } = useWishlist();
+  const isLoggedIn = useSelector((state) => state.user.isLoggedIn); // ✅ lấy từ redux
+  const navigate = useNavigate();
 
   // ✅ Kiểm tra sản phẩm có trong wishlist chưa
   const exists = wishlistItems.some((it) => it._id === productData._id);
 
   // ✅ Hàm toggle wishlist
   const handleWishlistClick = () => {
+    if (!isLoggedIn) {
+      toast.warn("Please log in to use this feature!", {
+        position: "top-center",
+        autoClose: 2000,
+      });
+      navigate("/login");
+      return;
+    }
+
     if (exists) {
       removeFromWishlist(productData._id);
       toast.info("❌ Removed from favorites list");
