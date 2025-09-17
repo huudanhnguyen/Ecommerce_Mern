@@ -20,20 +20,20 @@ const Breadcrumb = ({ product }) => {
       </Link>
 
       {product ? (
-        // Nếu có data từ API thì render theo category + title
+        // ✅ Dữ liệu từ API
         <>
           <span>›</span>
           <Link
-            to={`/products/${product.category?.toLowerCase()}`}
+            to={`/products/${product.category?.slug}`}
             className="hover:underline text-black-600"
           >
-            {product.category}
+            {product.category?.title}
           </Link>
           <span>›</span>
           <span className="font-semibold uppercase">{product.title}</span>
         </>
       ) : (
-        // Nếu chưa có data từ API thì fallback theo URL slug
+        // ✅ Fallback theo URL slug
         pathnames.map((value, index) => {
           const to = `/${pathnames.slice(0, index + 1).join("/")}`;
           const isLast = index === pathnames.length - 1;

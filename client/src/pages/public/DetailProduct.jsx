@@ -4,6 +4,9 @@ import { useParams } from "react-router-dom";
 import { getProductById } from "../../apis/product";
 import { formatPrice, renderRatingStars } from "../../utils/helpers";
 import Breadcrumb from "../../components/Breadcrumb";
+import { useWishlist } from "../../context/WishlistContext";
+import { FaHeart } from "react-icons/fa";
+
 import {
   FaShieldAlt,
   FaShippingFast,
@@ -24,6 +27,12 @@ const DetailProduct = () => {
   const [product, setProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [mainImage, setMainImage] = useState(null);
+  const { wishlistItems, addToWishlist, removeFromWishlist } = useWishlist();
+
+  // Kiểm tra sản phẩm có trong wishlist không
+  const isInWishlist = product
+    ? wishlistItems.some((item) => item._id === product._id)
+    : false;
 
   // Tabs
   const tabs = [
@@ -247,17 +256,47 @@ const DetailProduct = () => {
             </div>
           </div>
 
-          <button
-            onClick={handleAddToCart}
-            disabled={!isVariantSelected}
-            className={`w-full font-bold py-3 rounded-md transition-colors ${
-              isVariantSelected
-                ? "bg-main text-white hover:bg-red-700"
-                : "bg-gray-300 text-gray-500 cursor-not-allowed"
-            }`}
-          >
-            ADD TO CART
-          </button>
+          <div className="flex gap-3">
+            {/* Add to Cart */}
+            <button
+              onClick={handleAddToCart}
+              disabled={!isVariantSelected}
+              className={`flex-1 flex items-center justify-center gap-2 font-bold py-3 rounded-md transition-colors
+      ${
+        isVariantSelected
+          ? "border border-main text-main hover:bg-main hover:text-white"
+          : "border border-gray-300 text-gray-400 cursor-not-allowed"
+      }`}
+            >
+              ADD TO CART
+            </button>
+
+            {/* Add/Remove Wishlist */}
+            {isInWishlist ? (
+              <button
+                onClick={() => removeFromWishlist(product._id)}
+                className="flex-1 flex items-center justify-center gap-2 font-bold py-3 rounded-md transition-colors
+      border border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+              >
+                REMOVE WISHLIST
+              </button>
+            ) : (
+              <button
+                onClick={() =>
+                  addToWishlist({
+                    _id: product._id,
+                    title: product.title,
+                    price: product.price,
+                    thumb: product.thumb,
+                  })
+                }
+                className="flex-1 flex items-center justify-center gap-2 font-bold py-3 rounded-md transition-colors
+      border border-main text-main hover:bg-main hover:text-white"
+              >
+                ADD TO WISHLIST
+              </button>
+            )}
+          </div>
 
           <div className="flex gap-2 mt-4">
             <a href="#" className="p-3 bg-gray-800 text-white rounded-full">
@@ -275,11 +314,31 @@ const DetailProduct = () => {
         {/* Cột phải: Chính sách */}
         <div className="md:col-span-3">
           <div className="space-y-4">
-            <PolicyItem icon={<FaShieldAlt />} title="Guarantee" subtitle="Quality Checked" />
-            <PolicyItem icon={<FaShippingFast />} title="Free Shipping" subtitle="Free On All Products" />
-            <PolicyItem icon={<FaGift />} title="Special Gift Cards" subtitle="Special Gift Cards" />
-            <PolicyItem icon={<FaUndo />} title="Free Return" subtitle="Within 7 Days" />
-            <PolicyItem icon={<FaHeadset />} title="Consultancy" subtitle="Lifetime 24/7/356" />
+            <PolicyItem
+              icon={<FaShieldAlt />}
+              title="Guarantee"
+              subtitle="Quality Checked"
+            />
+            <PolicyItem
+              icon={<FaShippingFast />}
+              title="Free Shipping"
+              subtitle="Free On All Products"
+            />
+            <PolicyItem
+              icon={<FaGift />}
+              title="Special Gift Cards"
+              subtitle="Special Gift Cards"
+            />
+            <PolicyItem
+              icon={<FaUndo />}
+              title="Free Return"
+              subtitle="Within 7 Days"
+            />
+            <PolicyItem
+              icon={<FaHeadset />}
+              title="Consultancy"
+              subtitle="Lifetime 24/7/356"
+            />
           </div>
         </div>
       </div>
@@ -315,16 +374,16 @@ const DetailProduct = () => {
           </table>
         </div>
       </div>
-            {/* --- Other Customers Also Buy --- */}
-<div className="mt-16">
-  {product?.category && (
-    <ProductSlider
-      title="Other Customers Also Buy"
-      apiParams={{ category: product.category, limit: 10 }}
-      excludeId={product._id} // Không hiển thị sản phẩm hiện tại
-    />
-  )}
-</div>
+      {/* --- Other Customers Also Buy --- */}
+      <div className="mt-16">
+        {product?.category && (
+          <ProductSlider
+            title="Other Customers Also Buy"
+            apiParams={{ category: product.category, limit: 10 }}
+            excludeId={product._id} // Không hiển thị sản phẩm hiện tại
+          />
+        )}
+      </div>
     </div>
   );
 };

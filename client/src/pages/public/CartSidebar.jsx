@@ -2,6 +2,7 @@ import React from "react";
 import { useCart } from "../../context/CartContext";
 import { FaTimes } from "react-icons/fa";
 import { formatPrice } from "../../utils/helpers";
+import { Link } from "react-router-dom";
 
 const CartSidebar = () => {
   const { cartItems, removeFromCart, updateQuantity, isOpen, setIsOpen } = useCart();
@@ -99,7 +100,13 @@ const CartSidebar = () => {
         </div>
 
         <div className="flex gap-2">
-          <button className="flex-1 bg-main text-white py-2 rounded">Giỏ hàng</button>
+          <Link
+  to="/cart"
+  className="flex-1 bg-main text-white py-2 rounded text-center"
+  onClick={() => setIsOpen(false)}
+>
+  Giỏ hàng
+</Link>
           <button className="flex-1 bg-black text-white py-2 rounded">Thanh toán</button>
         </div>
       </div>

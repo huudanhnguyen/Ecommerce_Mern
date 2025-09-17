@@ -19,7 +19,9 @@ import SearchResult from "./pages/public/SearchResult";
 import MyAccount from "./pages/member/MyAccount";
 import Profile from "./pages/member/Profile";
 import Orders from "./pages/member/Orders";
-import Wishlist from "./pages/member/Wishlist";
+// import Wishlist from "./pages/member/Wishlist";
+import CartPage from "./pages/public/CartPage";
+import Wishlist from "./pages/public/WishlistPage";
 
 function App() {
   return (
@@ -38,6 +40,8 @@ function App() {
           path={path.DETAIL_PRODUCT__ID__SLUG}
           element={<DetailProduct />}
         />
+        <Route path={path.CART} element={<CartPage />} />
+        <Route path={path.WISHLIST} element={<Wishlist />} />
         <Route path={path.BLOGS} element={<Blogs />} />
         <Route path={path.OUR_SERVICES} element={<OurServices />} />
         <Route path={path.FAQs} element={<FAQs />} />
@@ -48,7 +52,7 @@ function App() {
           <Route index element={<Profile />} />
           <Route path="profile" element={<Profile />} />
           <Route path="orders" element={<Orders />} />
-          <Route path="wishlist" element={<Wishlist />} />
+          {/* <Route path="wishlist" element={<Wishlist />} /> */}
         </Route>
 
         <Route path={path.NOT_FOUND} element={<Home />} />

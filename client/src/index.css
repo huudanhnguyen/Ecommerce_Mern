@@ -1,6 +1,8 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 
 /* Bọc các style của slick vào một class cha để không ảnh hưởng toàn cục */
 .custom-slick .slick-prev,
