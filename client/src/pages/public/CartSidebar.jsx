@@ -22,7 +22,7 @@ const CartSidebar = () => {
     >
       {/* Header */}
       <div className="flex justify-between items-center p-4 border-b">
-        <h2 className="text-lg font-bold">Giỏ hàng của bạn</h2>
+        <h2 className="text-lg font-bold">My Cart</h2>
         <button aria-label="Close cart" onClick={() => setIsOpen(false)}>
           <FaTimes size={20} />
         </button>
@@ -31,7 +31,7 @@ const CartSidebar = () => {
       {/* Body */}
       <div className="p-4 flex flex-col gap-4 overflow-y-auto h-[70%]">
         {cartItems.length === 0 ? (
-          <p className="text-gray-500">Giỏ hàng trống</p>
+          <p className="text-gray-500">Empty Cart</p>
         ) : (
           cartItems.map((item, index) => {
             const variants = item.variants ?? item.selectedVariants ?? {};
@@ -84,7 +84,7 @@ const CartSidebar = () => {
                   className="text-red-500 text-sm"
                   aria-label={`Xóa ${title}`}
                 >
-                  Xóa
+                  Delete
                 </button>
               </div>
             );
@@ -95,7 +95,7 @@ const CartSidebar = () => {
       {/* Footer */}
       <div className="p-4 border-t">
         <div className="flex justify-between items-center mb-3">
-          <span className="font-semibold">Tổng cộng</span>
+          <span className="font-semibold">Total</span>
           <span className="font-bold text-main">{formatPrice(total)}</span>
         </div>
 
@@ -105,9 +105,9 @@ const CartSidebar = () => {
   className="flex-1 bg-main text-white py-2 rounded text-center"
   onClick={() => setIsOpen(false)}
 >
-  Giỏ hàng
+  Shopping Cart
 </Link>
-          <button className="flex-1 bg-black text-white py-2 rounded">Thanh toán</button>
+          <button className="flex-1 bg-black text-white py-2 rounded">Check Out</button>
         </div>
       </div>
     </div>

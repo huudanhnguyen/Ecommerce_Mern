@@ -5,7 +5,6 @@ import { getProductById } from "../../apis/product";
 import { formatPrice, renderRatingStars } from "../../utils/helpers";
 import Breadcrumb from "../../components/Breadcrumb";
 import { useWishlist } from "../../context/WishlistContext";
-import { FaHeart } from "react-icons/fa";
 
 import {
   FaShieldAlt,
@@ -22,19 +21,22 @@ import {
 import { useCart } from "../../context/CartContext";
 import ProductSlider from "../../components/ProductSlider";
 
+// ✅ import toast
+import { toast } from "react-toastify";
+
 const DetailProduct = () => {
   const { pid } = useParams();
   const [product, setProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [mainImage, setMainImage] = useState(null);
   const { wishlistItems, addToWishlist, removeFromWishlist } = useWishlist();
+  const { addToCart } = useCart();
 
   // Kiểm tra sản phẩm có trong wishlist không
   const isInWishlist = product
     ? wishlistItems.some((item) => item._id === product._id)
     : false;
 
-  // Tabs
   const tabs = [
     { key: "DESCRIPTION", label: "DESCRIPTION" },
     { key: "WARRANTY", label: "WARRANTY" },
@@ -43,9 +45,7 @@ const DetailProduct = () => {
   ];
   const [activeTab, setActiveTab] = useState(tabs[0].key);
 
-  // Lưu biến thể đã chọn
   const [selectedVariants, setSelectedVariants] = useState({});
-  const { addToCart } = useCart();
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -104,6 +104,25 @@ const DetailProduct = () => {
       quantity,
       selectedVariants
     );
+    toast.success("🛒 Added to cart!", {
+      position: "top-left",
+    });
+  };
+
+  const handleToggleWishlist = () => {
+    if (!product) return;
+    if (isInWishlist) {
+      removeFromWishlist(product._id);
+      toast.info("❌ Removed from favorites list");
+    } else {
+      addToWishlist({
+        _id: product._id,
+        title: product.title,
+        price: product.price,
+        thumb: product.thumb,
+      });
+      toast.success("❤️ Added to favorites list");
+    }
   };
 
   const isVariantSelected =
@@ -272,30 +291,17 @@ const DetailProduct = () => {
             </button>
 
             {/* Add/Remove Wishlist */}
-            {isInWishlist ? (
-              <button
-                onClick={() => removeFromWishlist(product._id)}
-                className="flex-1 flex items-center justify-center gap-2 font-bold py-3 rounded-md transition-colors
-      border border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
-              >
-                REMOVE WISHLIST
-              </button>
-            ) : (
-              <button
-                onClick={() =>
-                  addToWishlist({
-                    _id: product._id,
-                    title: product.title,
-                    price: product.price,
-                    thumb: product.thumb,
-                  })
-                }
-                className="flex-1 flex items-center justify-center gap-2 font-bold py-3 rounded-md transition-colors
-      border border-main text-main hover:bg-main hover:text-white"
-              >
-                ADD TO WISHLIST
-              </button>
-            )}
+            <button
+              onClick={handleToggleWishlist}
+              className={`flex-1 flex items-center justify-center gap-2 font-bold py-3 rounded-md transition-colors
+      ${
+        isInWishlist
+          ? "border border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+          : "border border-main text-main hover:bg-main hover:text-white"
+      }`}
+            >
+              {isInWishlist ? "REMOVE WISHLIST" : "ADD TO WISHLIST"}
+            </button>
           </div>
 
           <div className="flex gap-2 mt-4">
@@ -374,13 +380,14 @@ const DetailProduct = () => {
           </table>
         </div>
       </div>
+
       {/* --- Other Customers Also Buy --- */}
       <div className="mt-16">
         {product?.category && (
           <ProductSlider
             title="Other Customers Also Buy"
             apiParams={{ category: product.category, limit: 10 }}
-            excludeId={product._id} // Không hiển thị sản phẩm hiện tại
+            excludeId={product._id}
           />
         )}
       </div>
