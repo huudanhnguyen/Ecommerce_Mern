@@ -35,7 +35,7 @@ const DetailProduct = () => {
   const [product, setProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [mainImage, setMainImage] = useState(null);
-  const { wishlistItems, addToWishlist, removeFromWishlist } = useWishlist();
+  const { wishlistItems, toggleWishlist , removeFromWishlist } = useWishlist();
   const { addToCart } = useCart();
   const isLoggedIn = useSelector((state) => state.user.isLoggedIn);
 
@@ -140,32 +140,29 @@ const handleAddToCart = () => {
 };
 
 
-  // ✅ toggle wishlist (context + DB)
-  const handleToggleWishlist = () => {
-    if (!product) return;
+const handleToggleWishlist = () => {
+  if (!product) return;
 
-    checkLoginAndPerformAction(async () => {
-      try {
-        if (isInWishlist) {
-          await apiRemoveFromWishlist(product._id);
-          removeFromWishlist(product._id);
-          toast.info("❌ Removed from favorites list");
-        } else {
-          await apiAddToWishlist(product._id);
-          addToWishlist({
-            _id: product._id,
-            title: product.title,
-            price: product.price,
-            thumb: product.thumb,
-          });
-          toast.success("❤️ Added to favorites list");
-        }
-      } catch (err) {
-        console.error("Wishlist update failed:", err);
-        toast.error("Failed to update wishlist!");
+  checkLoginAndPerformAction(async () => {
+    try {
+      if (isInWishlist) {
+        await removeFromWishlist(product._id); // chỉ gọi context
+        toast.info("❌ Removed from favorites list");
+      } else {
+        await toggleWishlist ({
+          _id: product._id,
+          title: product.title,
+          price: product.price,
+          thumb: product.thumb,
+        }); // chỉ gọi context
+        toast.success("❤️ Added to favorites list");
       }
-    });
-  };
+    } catch (err) {
+      console.error("Wishlist update failed:", err);
+      toast.error("Failed to update wishlist!");
+    }
+  });
+};
 
   const isVariantSelected =
     !product?.variants ||

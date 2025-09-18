@@ -8,7 +8,6 @@ import path from "../../utils/path";
 
 const WishlistPage = () => {
   const { wishlistItems, removeFromWishlist } = useWishlist();
-  const { addToCart } = useCart();
 
   return (
     <div className="w-main px-8 py-6">
@@ -29,7 +28,7 @@ const WishlistPage = () => {
           <thead>
             <tr className="border-b">
               <th className="text-left p-2 w-2/3">Product</th>
-              <th className="p-2 w-1/3 text-center">Thao tác</th>
+              <th className="p-2 w-1/3 text-center">Action</th>
             </tr>
           </thead>
           <tbody>

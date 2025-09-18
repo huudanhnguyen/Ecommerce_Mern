@@ -1,15 +1,45 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { apiToggleWishlist } from "../apis/user";
+import {
+  apiGetWishlist,
+  apiAddToWishlist,
+  apiRemoveFromWishlist,
+} from "../apis/user";
 
-// === Toggle wishlist ===
-export const toggleWishlistDB = createAsyncThunk(
-  "wishlist/toggle",
-  async (data, { rejectWithValue }) => {
+// === Get wishlist ===
+export const getWishlistDB = createAsyncThunk(
+  "wishlist/get",
+  async (_, { rejectWithValue }) => {
     try {
-      const res = await apiToggleWishlist(data);
+      const res = await apiGetWishlist();
       return res.data.wishlist;
     } catch (err) {
-      return rejectWithValue(err.response?.data || { message: "Error wishlist" });
+      return rejectWithValue(err.response?.data || { message: "Error get wishlist" });
+    }
+  }
+);
+
+// === Add wishlist ===
+export const addToWishlistDB = createAsyncThunk(
+  "wishlist/add",
+  async (productId, { rejectWithValue }) => {
+    try {
+      const res = await apiAddToWishlist(productId);
+      return res.data.wishlist;
+    } catch (err) {
+      return rejectWithValue(err.response?.data || { message: "Error add wishlist" });
+    }
+  }
+);
+
+// === Remove wishlist ===
+export const removeFromWishlistDB = createAsyncThunk(
+  "wishlist/remove",
+  async (productId, { rejectWithValue }) => {
+    try {
+      const res = await apiRemoveFromWishlist(productId);
+      return res.data.wishlist;
+    } catch (err) {
+      return rejectWithValue(err.response?.data || { message: "Error remove wishlist" });
     }
   }
 );
@@ -24,16 +54,27 @@ const wishlistSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(toggleWishlistDB.pending, (state) => {
+      // GET
+      .addCase(getWishlistDB.pending, (state) => {
         state.loading = true;
       })
-      .addCase(toggleWishlistDB.fulfilled, (state, action) => {
+      .addCase(getWishlistDB.fulfilled, (state, action) => {
         state.loading = false;
         state.items = action.payload;
       })
-      .addCase(toggleWishlistDB.rejected, (state, action) => {
+      .addCase(getWishlistDB.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+
+      // ADD
+      .addCase(addToWishlistDB.fulfilled, (state, action) => {
+        state.items = action.payload;
+      })
+
+      // REMOVE
+      .addCase(removeFromWishlistDB.fulfilled, (state, action) => {
+        state.items = action.payload;
       });
   },
 });

@@ -1,13 +1,9 @@
-// src/components/ProductCard.jsx
 import React from "react";
 import { formatPrice, renderRatingStars } from "../utils/helpers.jsx";
 import { FaHeart } from "react-icons/fa";
-import { Link, useNavigate } from "react-router-dom"; // ✅ thêm useNavigate
+import { Link } from "react-router-dom";
 import path from "../utils/path";
-import { useWishlist } from "../context/WishlistContext";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { useSelector } from "react-redux"; // ✅ thêm redux
+import { useWishlistActions } from "../hooks/useWishlistActions";
 
 const ProductCard = ({ productData }) => {
   if (!productData) return null;
@@ -20,38 +16,8 @@ const ProductCard = ({ productData }) => {
 
   const productName = productData?.name || productData?.title || "No name";
 
-  // ✅ Lấy context wishlist
-  const { addToWishlist, wishlistItems, removeFromWishlist } = useWishlist();
-  const isLoggedIn = useSelector((state) => state.user.isLoggedIn); // ✅ lấy từ redux
-  const navigate = useNavigate();
-
-  // ✅ Kiểm tra sản phẩm có trong wishlist chưa
-  const exists = wishlistItems.some((it) => it._id === productData._id);
-
-  // ✅ Hàm toggle wishlist
-  const handleWishlistClick = () => {
-    if (!isLoggedIn) {
-      toast.warn("Please log in to use this feature!", {
-        position: "top-center",
-        autoClose: 2000,
-      });
-      navigate("/login");
-      return;
-    }
-
-    if (exists) {
-      removeFromWishlist(productData._id);
-      toast.info("❌ Removed from favorites list");
-    } else {
-      addToWishlist({
-        _id: productData._id,
-        title: productData.title,
-        price: productData.price,
-        thumb: productData.thumb,
-      });
-      toast.success("❤️ Added to favorites list");
-    }
-  };
+  // ✅ Dùng hook chung
+  const { exists, handleToggle } = useWishlistActions(productData._id);
 
   return (
     <div className="w-full flex items-center gap-4 p-2 border hover:shadow-lg rounded-md transition-shadow group relative">
@@ -83,7 +49,7 @@ const ProductCard = ({ productData }) => {
         {/* Icon hành động */}
         <div className="h-0 opacity-0 group-hover:h-full group-hover:opacity-100 transition-all flex items-center gap-2 mt-2">
           <button
-            onClick={handleWishlistClick}
+            onClick={handleToggle}
             className={`p-2 rounded-full transition-all ${
               exists
                 ? "bg-main text-white"

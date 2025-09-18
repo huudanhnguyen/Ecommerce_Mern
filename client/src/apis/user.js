@@ -63,3 +63,7 @@ export const apiAddToWishlist = (productId) =>
 // Xóa sản phẩm khỏi wishlist
 export const apiRemoveFromWishlist = (productId) =>
   axios.delete("/user/wishlist", { data: { productId } });
+
+// ✅ Toggle wishlist (add/remove)
+export const apiToggleWishlist = (productId) =>
+  axios.post("/user/toggle-wishlist", { productId });

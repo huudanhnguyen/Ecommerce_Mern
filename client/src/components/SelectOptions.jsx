@@ -1,38 +1,9 @@
-// src/components/SelectOptions.jsx
 import React from "react";
 import { FaHeart } from "react-icons/fa";
-import { useWishlist } from "../context/WishlistContext";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { useSelector } from "react-redux";   // ✅ thêm
-import { useNavigate } from "react-router-dom"; // ✅ thêm
+import { useWishlistActions } from "../hooks/useWishlistActions";
 
 const SelectOptions = ({ onQuickView, productData }) => {
-  const { addToWishlist, wishlistItems, removeFromWishlist } = useWishlist();
-  const isLoggedIn = useSelector((state) => state.user.isLoggedIn); // ✅ check từ Redux
-  const navigate = useNavigate();
-
-  // Kiểm tra sản phẩm đã trong danh sách yêu thích chưa
-  const exists = wishlistItems.some((it) => it._id === productData._id);
-
-  const handleWishlistClick = () => {
-    if (!isLoggedIn) {
-      toast.warn("Please log in to use this feature!", {
-        position: "top-center",
-        autoClose: 2000,
-      });
-      navigate("/login");
-      return;
-    }
-
-    if (exists) {
-      removeFromWishlist(productData._id);
-      toast.info("❌ Removed from favorites list");
-    } else {
-      addToWishlist(productData);
-      toast.success("❤️ Added to favorites list");
-    }
-  };
+  const { exists, handleToggle } = useWishlistActions(productData._id);
 
   return (
     <div
@@ -40,7 +11,7 @@ const SelectOptions = ({ onQuickView, productData }) => {
                  opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:bottom-[120px]"
     >
       <button
-        onClick={handleWishlistClick}
+        onClick={handleToggle}
         className={`w-12 h-12 rounded-full flex justify-center items-center shadow-md transition-all
           ${exists ? "bg-white text-red-500 border border-red-500" : "bg-white text-gray-700 hover:bg-main hover:text-white"}`}
       >

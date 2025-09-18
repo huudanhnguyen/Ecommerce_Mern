@@ -1,4 +1,9 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
+import {
+  apiGetWishlist,
+  apiAddToWishlist,
+  apiRemoveFromWishlist,
+} from "../apis/user";
 
 const WishlistContext = createContext();
 
@@ -7,20 +12,58 @@ export const useWishlist = () => useContext(WishlistContext);
 export const WishlistProvider = ({ children }) => {
   const [wishlistItems, setWishlistItems] = useState([]);
 
-  const addToWishlist = (product) => {
-    // check trùng
-    const exists = wishlistItems.find((it) => it._id === product._id);
-    if (!exists) {
-      setWishlistItems([...wishlistItems, product]);
+  // 🔹 Load wishlist khi login
+  useEffect(() => {
+    const fetchWishlist = async () => {
+      try {
+        const res = await apiGetWishlist();
+        if (res.data?.success) {
+          setWishlistItems(res.data.wishlist); // ✅ populated từ backend
+        }
+      } catch (err) {
+        console.error("❌ Fetch wishlist failed:", err);
+      }
+    };
+
+    fetchWishlist();
+  }, []);
+
+  // 🔹 Toggle (add/remove) wishlist
+  const toggleWishlist = async (productId) => {
+    try {
+      const exists = wishlistItems.some((it) => it._id === productId);
+
+      let res;
+      if (exists) {
+        res = await apiRemoveFromWishlist(productId); // ❌ remove
+      } else {
+        res = await apiAddToWishlist(productId); // ❤️ add
+      }
+
+      if (res.data?.success) {
+        setWishlistItems(res.data.wishlist); // ✅ cập nhật từ server
+      }
+    } catch (err) {
+      console.error("❌ Toggle wishlist failed:", err);
     }
   };
 
-  const removeFromWishlist = (id) => {
-    setWishlistItems(wishlistItems.filter((it) => it._id !== id));
+  // 🔹 Remove riêng
+  const removeFromWishlist = async (productId) => {
+    try {
+      const res = await apiRemoveFromWishlist(productId);
+      if (res.data?.success) {
+        setWishlistItems(res.data.wishlist); // ✅ cập nhật từ server
+      }
+    } catch (err) {
+      console.error("❌ Remove wishlist failed:", err);
+    }
   };
 
   return (
-    <WishlistContext.Provider value={{ wishlistItems, addToWishlist, removeFromWishlist }}>
+    <WishlistContext.Provider
+      value={{ wishlistItems, toggleWishlist, removeFromWishlist }}
+    >
       {children}
     </WishlistContext.Provider>
   );

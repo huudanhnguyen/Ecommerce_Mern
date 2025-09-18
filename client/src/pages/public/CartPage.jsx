@@ -26,12 +26,12 @@ const CartPage = () => {
       {cartItems.length === 0 ? (
         <div className="text-center py-10">
           <p className="mb-4">Your cart is empty.</p>
-          <button
-            onClick={() => navigate("/products")}
-            className="bg-black text-white px-4 py-2 rounded"
+          <a
+            href="/"
+            className="mt-4 inline-block bg-main text-white px-6 py-2 rounded hover:bg-red-700 transition-colors"
           >
-            Continue Shopping
-          </button>
+            Continue shopping
+          </a>
         </div>
       ) : (
         <>
