@@ -1,6 +1,5 @@
-// src/pages/public/DetailProduct.jsx
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom"; // ✅ Import useNavigate
+import { useParams, useNavigate } from "react-router-dom";
 import { getProductById } from "../../apis/product";
 import { formatPrice, renderRatingStars } from "../../utils/helpers";
 import Breadcrumb from "../../components/Breadcrumb";
@@ -21,23 +20,25 @@ import {
   FaPlus,
 } from "react-icons/fa";
 import ProductSlider from "../../components/ProductSlider";
-
-// ✅ import toast
 import { toast } from "react-toastify";
+
+// ✅ import API user (đã fix đường dẫn)
+import {
+  apiAddToCart,
+  apiAddToWishlist,
+  apiRemoveFromWishlist,
+} from "../../apis/user";
 
 const DetailProduct = () => {
   const { pid } = useParams();
-  const navigate = useNavigate(); // ✅ Khởi tạo useNavigate
+  const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [mainImage, setMainImage] = useState(null);
   const { wishlistItems, addToWishlist, removeFromWishlist } = useWishlist();
   const { addToCart } = useCart();
-
-    // ✅ Lấy trạng thái đăng nhập từ Redux
   const isLoggedIn = useSelector((state) => state.user.isLoggedIn);
 
-  // Kiểm tra sản phẩm có trong wishlist không
   const isInWishlist = product
     ? wishlistItems.some((item) => item._id === product._id)
     : false;
@@ -49,9 +50,9 @@ const DetailProduct = () => {
     { key: "PAYMENT", label: "PAYMENT" },
   ];
   const [activeTab, setActiveTab] = useState(tabs[0].key);
-
   const [selectedVariants, setSelectedVariants] = useState({});
 
+  // ✅ fetch sản phẩm
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -73,13 +74,12 @@ const DetailProduct = () => {
           setProduct({ ...data, allImages: allImgs });
           setMainImage(allImgs[0]);
 
-          // Khởi tạo selectedVariants nếu có biến thể
+          // chọn mặc định variants đầu tiên
           if (data.variants && data.variants.length > 0) {
             const initialVariants = {};
-            data.variants.forEach(v => {
+            data.variants.forEach((v) => {
               if (v.variants && v.variants.length > 0) {
-                // Chọn mặc định biến thể đầu tiên của mỗi loại
-                initialVariants[v.label] = v.variants[0]; 
+                initialVariants[v.label] = v.variants[0];
               }
             });
             setSelectedVariants(initialVariants);
@@ -109,10 +109,10 @@ const DetailProduct = () => {
     }));
   };
 
-  // HÀM KIỂM TRA ĐĂNG NHẬP RIÊNG
+  // ✅ check login trước khi thực hiện action
   const checkLoginAndPerformAction = (action) => {
     if (isLoggedIn) {
-      action(); // Nếu đã đăng nhập, thực hiện hành động
+      action();
     } else {
       toast.warn("Please log in to use this feature!", {
         position: "top-center",
@@ -122,43 +122,47 @@ const DetailProduct = () => {
     }
   };
 
-  const handleAddToCart = () => {
-    if (!product) return;
-    
-    // ✅ Gọi hàm kiểm tra trước khi thêm vào giỏ hàng
-    checkLoginAndPerformAction(() => {
-      addToCart(
-        {
-          _id: product._id,
-          title: product.title,
-          price: product.price,
-          thumb: product.thumb,
-        },
-        quantity,
-        selectedVariants
-      );
-      toast.success("🛒 Added to cart!", {
-        position: "top-left",
-      });
-    });
-  };
+  // ✅ thêm vào cart (context + DB)
+const handleAddToCart = () => {
+  if (!product) return;
 
+  checkLoginAndPerformAction(async () => {
+    try {
+      // Gọi trực tiếp hàm context (đã có API call bên trong CartContext)
+      await addToCart(product, quantity, selectedVariants);
+
+      toast.success("🛒 Added to cart!", { position: "top-left" });
+    } catch (err) {
+      console.error("Add to cart failed:", err);
+      toast.error("Failed to add to cart!");
+    }
+  });
+};
+
+
+  // ✅ toggle wishlist (context + DB)
   const handleToggleWishlist = () => {
     if (!product) return;
 
-    // ✅ Gọi hàm kiểm tra trước khi thêm/bỏ khỏi danh sách yêu thích
-    checkLoginAndPerformAction(() => {
-      if (isInWishlist) {
-        removeFromWishlist(product._id);
-        toast.info("❌ Removed from favorites list");
-      } else {
-        addToWishlist({
-          _id: product._id,
-          title: product.title,
-          price: product.price,
-          thumb: product.thumb,
-        });
-        toast.success("❤️ Added to favorites list");
+    checkLoginAndPerformAction(async () => {
+      try {
+        if (isInWishlist) {
+          await apiRemoveFromWishlist(product._id);
+          removeFromWishlist(product._id);
+          toast.info("❌ Removed from favorites list");
+        } else {
+          await apiAddToWishlist(product._id);
+          addToWishlist({
+            _id: product._id,
+            title: product.title,
+            price: product.price,
+            thumb: product.thumb,
+          });
+          toast.success("❤️ Added to favorites list");
+        }
+      } catch (err) {
+        console.error("Wishlist update failed:", err);
+        toast.error("Failed to update wishlist!");
       }
     });
   };
@@ -262,7 +266,6 @@ const DetailProduct = () => {
             </div>
             <span className="text-gray-600 italic">(Sold: {product.sold})</span>
           </div>
-
           <ul className="list-disc list-inside text-sm text-gray-600 mb-4 space-y-1">
             {product.description
               ?.filter((line) => !line.toLowerCase().startsWith("thumbnail:"))
@@ -297,17 +300,11 @@ const DetailProduct = () => {
           <div className="flex items-center gap-4 mb-6">
             <span className="font-semibold">Quantity</span>
             <div className="flex items-center border rounded">
-              <button
-                onClick={() => handleQuantity("decrease")}
-                className="p-3"
-              >
+              <button onClick={() => handleQuantity("decrease")} className="p-3">
                 <FaMinus size={12} />
               </button>
               <span className="px-4">{quantity}</span>
-              <button
-                onClick={() => handleQuantity("increase")}
-                className="p-3"
-              >
+              <button onClick={() => handleQuantity("increase")} className="p-3">
                 <FaPlus size={12} />
               </button>
             </div>
@@ -316,32 +313,33 @@ const DetailProduct = () => {
           <div className="flex gap-3">
             {/* Add to Cart */}
             <button
-              onClick={handleAddToCart} // Đã đổi
+              onClick={handleAddToCart}
               disabled={!isVariantSelected}
               className={`flex-1 flex items-center justify-center gap-2 font-bold py-3 rounded-md transition-colors
-      ${
-        isVariantSelected
-          ? "border border-main text-main hover:bg-main hover:text-white"
-          : "border border-gray-300 text-gray-400 cursor-not-allowed"
-      }`}
+                ${
+                  isVariantSelected
+                    ? "border border-main text-main hover:bg-main hover:text-white"
+                    : "border border-gray-300 text-gray-400 cursor-not-allowed"
+                }`}
             >
               ADD TO CART
             </button>
 
-            {/* Add/Remove Wishlist */}
+            {/* Wishlist */}
             <button
-              onClick={handleToggleWishlist} // Đã đổi
+              onClick={handleToggleWishlist}
               className={`flex-1 flex items-center justify-center gap-2 font-bold py-3 rounded-md transition-colors
-      ${
-        isInWishlist
-          ? "border border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
-          : "border border-main text-main hover:bg-main hover:text-white"
-      }`}
+                ${
+                  isInWishlist
+                    ? "border border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                    : "border border-main text-main hover:bg-main hover:text-white"
+                }`}
             >
               {isInWishlist ? "REMOVE WISHLIST" : "ADD TO WISHLIST"}
             </button>
           </div>
 
+          {/* Social */}
           <div className="flex gap-2 mt-4">
             <a href="#" className="p-3 bg-gray-800 text-white rounded-full">
               <FaFacebookF />
@@ -387,7 +385,7 @@ const DetailProduct = () => {
         </div>
       </div>
 
-      {/* --- Tabs section --- */}
+      {/* Tabs */}
       <div className="mt-12">
         <div className="border-b flex gap-6 text-sm font-semibold">
           {tabs.map((tab) => (
@@ -419,14 +417,14 @@ const DetailProduct = () => {
         </div>
       </div>
 
-      {/* --- Other Customers Also Buy --- */}
+      {/* Gợi ý sản phẩm */}
       <div className="mt-16">
         {product?.category && (
-<ProductSlider
-  title="Other Customers Also Buy"
-  apiParams={{ category: product.category.slug, limit: 10 }}
-  excludeId={product._id}
-/>
+          <ProductSlider
+            title="Other Customers Also Buy"
+            apiParams={{ category: product.category.slug, limit: 10 }}
+            excludeId={product._id}
+          />
         )}
       </div>
     </div>

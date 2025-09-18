@@ -31,8 +31,6 @@ export default function ProductList() {
           ...(normalizedCategory ? { category: normalizedCategory } : {}), // dùng slug chữ thường
         });
 
-        console.log("👉 API response:", res.data);
-
         if (res.data.success) {
           setProducts(res.data.products);
           setTotalPages(res.data.totalPages);

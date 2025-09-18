@@ -1,98 +1,79 @@
 // src/context/CartContext.jsx
 import React, { createContext, useContext, useState, useEffect } from "react";
+import {
+  apiGetCart,
+  apiAddToCart,
+  apiUpdateCart,
+  apiRemoveFromCart,
+} from "../apis/user";
 
 const CartContext = createContext();
 
-export const useCart = () => useContext(CartContext);
-
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
-  const [isOpen, setIsOpen] = useState(false);
 
-  // 🔹 Load từ localStorage khi khởi động
+  // Load giỏ hàng khi app mount
   useEffect(() => {
-    const stored = localStorage.getItem("cartItems");
-    if (stored) {
-      setCartItems(JSON.parse(stored));
-    }
+    const fetchCart = async () => {
+      try {
+        const res = await apiGetCart();
+        if (res.data?.success) {
+          setCartItems(res.data.cart);
+        }
+      } catch (err) {
+        console.error("Fetch cart failed:", err);
+      }
+    };
+    fetchCart();
   }, []);
 
-  // 🔹 Lưu xuống localStorage mỗi khi thay đổi
-  useEffect(() => {
-    localStorage.setItem("cartItems", JSON.stringify(cartItems));
-  }, [cartItems]);
-
-  // ✅ Thêm vào giỏ hàng
-  const addToCart = (product, quantity = 1, variants = {}) => {
-    const normalizedItem = {
-      _id: product._id,
-      title: product.title,
-      price: product.price,
-      thumb: product.thumb,
-      variants: variants,
-      quantity: quantity,
-    };
-
-    setCartItems((prev) => {
-      const index = prev.findIndex(
-        (item) =>
-          item._id === normalizedItem._id &&
-          JSON.stringify(item.variants) === JSON.stringify(normalizedItem.variants)
-      );
-
-      if (index !== -1) {
-        const updated = [...prev];
-        updated[index].quantity += quantity;
-        return updated;
-      } else {
-        return [...prev, normalizedItem];
+  // ✅ Thêm sản phẩm
+  const addToCart = async (product, quantity = 1, variants = {}) => {
+    try {
+      const res = await apiAddToCart({
+        productId: product._id,
+        quantity,
+        variants,
+      });
+      if (res.data?.success) {
+        setCartItems(res.data.cart);
       }
-    });
-
-    setIsOpen(true); // mở sidebar sau khi thêm
+    } catch (err) {
+      console.error("Add to cart failed:", err);
+    }
   };
 
-  // ✅ Xóa khỏi giỏ hàng
-  const removeFromCart = (_id, variants = {}) => {
-    setCartItems((prev) =>
-      prev.filter(
-        (item) =>
-          !(
-            item._id === _id &&
-            JSON.stringify(item.variants ?? item.selectedVariants ?? {}) ===
-              JSON.stringify(variants)
-          )
-      )
-    );
+  // ✅ Cập nhật số lượng
+  const updateCart = async (productId, quantity, variants = {}) => {
+    try {
+      const res = await apiUpdateCart({ productId, quantity, variants });
+      if (res.data?.success) {
+        setCartItems(res.data.cart);
+      }
+    } catch (err) {
+      console.error("Update cart failed:", err);
+    }
   };
 
-  // ✅ Cập nhật số lượng sản phẩm
-  const updateQuantity = (_id, variants = {}, newQty) => {
-    setCartItems((prev) =>
-      prev
-        .map((item) =>
-          item._id === _id &&
-          JSON.stringify(item.variants ?? item.selectedVariants ?? {}) ===
-            JSON.stringify(variants)
-            ? { ...item, quantity: newQty }
-            : item
-        )
-        .filter((item) => item.quantity > 0) // xoá nếu số lượng <= 0
-    );
+  // ✅ Xóa sản phẩm
+  const removeFromCart = async (productId, variants = {}) => {
+    try {
+      const res = await apiRemoveFromCart({ productId, variants }); // 👈 gửi đúng { data }
+      if (res.data?.success) {
+        setCartItems(res.data.cart);
+      }
+    } catch (err) {
+      console.error("Remove from cart failed:", err);
+    }
   };
 
   return (
     <CartContext.Provider
-      value={{
-        cartItems,
-        addToCart,
-        removeFromCart,
-        updateQuantity, // ✅ thêm vào context
-        isOpen,
-        setIsOpen,
-      }}
+      value={{ cartItems, addToCart, updateCart, removeFromCart }}
     >
       {children}
     </CartContext.Provider>
   );
 };
+
+export const useCart = () => useContext(CartContext);
