@@ -6,26 +6,33 @@ import {
   apiUpdateCart,
   apiRemoveFromCart,
 } from "../apis/user";
+import { useSelector } from "react-redux"; // ✅ thêm để lấy trạng thái đăng nhập
 
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
+  const isLoggedIn = useSelector((state) => state.user.isLoggedIn); // ✅ lấy từ Redux
 
-  // Load giỏ hàng khi app mount
+  // Load giỏ hàng khi app mount hoặc khi login
   useEffect(() => {
     const fetchCart = async () => {
       try {
-        const res = await apiGetCart();
-        if (res.data?.success) {
-          setCartItems(res.data.cart);
+        if (isLoggedIn) {
+          const res = await apiGetCart();
+          if (res.data?.success) {
+            setCartItems(res.data.cart);
+          }
+        } else {
+          // ✅ Khi logout thì clear luôn giỏ hàng
+          setCartItems([]);
         }
       } catch (err) {
         console.error("Fetch cart failed:", err);
       }
     };
     fetchCart();
-  }, []);
+  }, [isLoggedIn]); // 👈 thêm dependency
 
   // ✅ Thêm sản phẩm
   const addToCart = async (product, quantity = 1, variants = {}) => {
@@ -58,7 +65,7 @@ export const CartProvider = ({ children }) => {
   // ✅ Xóa sản phẩm
   const removeFromCart = async (productId, variants = {}) => {
     try {
-      const res = await apiRemoveFromCart({ productId, variants }); // 👈 gửi đúng { data }
+      const res = await apiRemoveFromCart({ productId, variants });
       if (res.data?.success) {
         setCartItems(res.data.cart);
       }

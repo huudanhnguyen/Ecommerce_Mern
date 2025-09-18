@@ -1,6 +1,5 @@
 import React from "react";
 import { useWishlist } from "../../context/WishlistContext";
-import { useCart } from "../../context/CartContext";
 import { formatPrice } from "../../utils/helpers";
 import Breadcrumb from "../../components/Breadcrumb";
 import { Link } from "react-router-dom";
