@@ -80,6 +80,7 @@ const productSchema = new mongoose.Schema(
       {
         star: Number,
         comment: String,
+        name: String,
         postedBy: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "User",

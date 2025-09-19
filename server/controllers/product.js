@@ -254,72 +254,75 @@ const updateProduct = asyncHandler(async (req, res) => {
   }
 });
 const ratings = asyncHandler(async (req, res) => {
-  const { _id } = req.user;
-  const { star, comment, productId, postedBy } = req.body;
-  if (!star || !productId) {
-    return res.status(400).json({ status: false, message: "Missing inputs" });
+  const { _id } = req.user;  // lấy userId từ token
+  const { star, comment, name, postedBy  } = req.body;
+  const { pid } = req.params; // lấy productId từ params
+
+  if (!star) {
+    return res.status(400).json({ status: false, message: "Missing star rating" });
   }
-  const product = await Product.findById(productId);
+
+  const product = await Product.findById(pid);
   if (!product) {
-    return res
-      .status(404)
-      .json({ status: false, message: "Product not found" });
+    return res.status(404).json({ status: false, message: "Product not found" });
   }
-  // 3. Kiểm tra xem người dùng đã đánh giá sản phẩm này chưa
+
+  // Kiểm tra người dùng đã từng đánh giá chưa
   const alreadyRated = product.ratings.find(
     (rating) => rating.postedBy && rating.postedBy.equals(_id)
   );
+
   if (alreadyRated) {
-    // --- TRƯỜNG HỢP 1: NGƯỜI DÙNG ĐÃ ĐÁNH GIÁ -> CẬP NHẬT LẠI ---
-    // Tính toán sự chênh lệch điểm star để cập nhật tổng điểm
-    const ratingDifference = star - alreadyRated.star;
-    // Dùng `updateOne` với `arrayFilters` để cập nhật chính xác phần tử trong mảng
-    await Product.updateOne(
-      {
-        _id: productId,
-        "ratings.postedBy": _id,
-      },
-      {
-        // Cập nhật điểm star và comment của đánh giá cũ
-        $set: {
-          "ratings.$.star": star,
-          "ratings.$.comment": comment,
-          "ratings.$.postedAt": new Date(),
-        },
-        // Cập nhật lại tổng điểm rating bằng cách cộng thêm phần chênh lệch
-        $inc: { totalRating: ratingDifference },
-      }
-    );
+    // Cập nhật đánh giá cũ
+    alreadyRated.star = star;
+    alreadyRated.comment = comment !== undefined ? comment : alreadyRated.comment;
+    alreadyRated.name = name !== undefined ? name : alreadyRated.name;
+    alreadyRated.postedAt = new Date();
   } else {
-    // --- TRƯỜNG HỢP 2: NGƯỜI DÙNG ĐÁNH GIÁ LẦN ĐẦU -> THÊM MỚI ---
-    // Dùng `findByIdAndUpdate` để thực hiện các thao tác một cách nguyên tử
-    await Product.findByIdAndUpdate(productId, {
-      // Thêm một đánh giá mới vào mảng ratings
-      $push: {
-        ratings: { star, comment, postedBy: _id, postedAt: new Date() },
-      },
-      // Tăng tổng số điểm và tổng số lượt đánh giá
-      $inc: { totalRating: star, totalRatings: 1 },
+    // Thêm mới đánh giá
+    product.ratings.push({
+      star,
+      comment: comment || "",   // cho phép rỗng
+      name: name || "",         // cho phép rỗng
+      postedBy: _id,
+      postedAt: new Date(),
     });
   }
-  // Lấy lại sản phẩm đã được cập nhật để trả về cho client
-  const updatedProduct = await Product.findById(productId);
-  // Tính toán lại tổng điểm rating
-  const ratingsCount = updatedProduct.ratings.length;
-  const sumRatings = updatedProduct.ratings.reduce(
-    (sum, rating) => sum + +rating.star,
-    0
-  );
-  updatedProduct.totalRating =
-    Math.round((sumRatings * 10) / ratingsCount) / 10;
-  await updatedProduct.save();
-  // Trả về phản hồi thành công
+
+  // Tính lại tổng rating trung bình
+  const ratingsCount = product.ratings.length;
+  const sumRatings = product.ratings.reduce((sum, r) => sum + r.star, 0);
+  product.totalRating = Math.round((sumRatings / ratingsCount) * 10) / 10;
+
+  await product.save();
+
   return res.status(200).json({
     status: true,
-    message: "Rating updated successfully",
-    product: updatedProduct,
+    message: "Rating submitted successfully",
+    product,
   });
 });
+
+
+// Lấy danh sách ratings của một sản phẩm
+const getProductRatings = asyncHandler(async (req, res) => {
+  const { pid } = req.params;
+
+  const product = await Product.findById(pid)
+    .populate("ratings.postedBy", "name email"); // populate để lấy thông tin user
+
+  if (!product) {
+    return res.status(404).json({ status: false, message: "Product not found" });
+  }
+
+  return res.status(200).json({
+    status: true,
+    ratings: product.ratings,
+    totalRating: product.totalRating,
+  });
+});
+
+
 const uploadImageProduct = asyncHandler(async (req, res) => {
   const { pid } = req.params;
   if (!req.files || req.files.length === 0) {
@@ -346,6 +349,8 @@ const uploadImageProduct = asyncHandler(async (req, res) => {
     data: updatedProduct,
   });
 });
+
+
 module.exports = {
   createProduct,
   getProduct,
@@ -354,4 +359,5 @@ module.exports = {
   updateProduct,
   ratings,
   uploadImageProduct,
+  getProductRatings,
 };

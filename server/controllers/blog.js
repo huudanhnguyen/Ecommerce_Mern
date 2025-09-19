@@ -235,13 +235,63 @@ const getBlogById = asyncHandler(async (req, res) => {
     res.status(200).json(blogObject);
 });
 const getBlogs = asyncHandler(async (req, res) => {
+  try {
+    // Lấy page và limit từ query (nếu không có thì mặc định page=1, limit=6)
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 6;
+    const skip = (page - 1) * limit;
+
+    // Đếm tổng số blogs
+    const total = await Blog.countDocuments();
+
+    // Lấy danh sách blogs phân trang
     const blogs = await Blog.find({})
-        .populate('likes', 'lastName firstName email')
-        .populate('dislikes', 'lastName firstName email')
-        .populate('author', 'firstName lastName')
-        .populate('category', 'title _id') // Chỉ lấy title và _id của category
-    res.status(200).json(blogs);
+      .populate("likes", "lastName firstName email")
+      .populate("dislikes", "lastName firstName email")
+      .populate("author", "firstName lastName email")
+      .populate("category", "title _id")
+      .sort({ createdAt: -1 }) // mới nhất trước
+      .skip(skip)
+      .limit(limit);
+
+    // Format lại dữ liệu trả về
+    const formattedBlogs = blogs.map((blog) => ({
+      _id: blog._id,
+      title: blog.title,
+      description: blog.description,
+      slug: blog.slug,
+      content: blog.content,
+      numberViews: blog.numberViews,
+      createdAt: blog.createdAt,
+      updatedAt: blog.updatedAt,
+      images:
+        blog.images?.map((img) => ({
+          url: img.url,
+          alt: img.alt || blog.title,
+        })) || [],
+      author: blog.author?.firstName
+        ? `${blog.author.firstName} ${blog.author.lastName}`
+        : blog.author || "Admin",
+      category: blog.category
+        ? { _id: blog.category._id, title: blog.category.title }
+        : null,
+      likes: blog.likes || [],
+      dislikes: blog.dislikes || [],
+    }));
+
+    res.status(200).json({
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+      blogs: formattedBlogs,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching blogs", error });
+  }
 });
+
+
+
 const uploadImageBlog = asyncHandler(async (req, res) => {
     const { id } = req.params;
     if (!req.files || req.files.length === 0) {

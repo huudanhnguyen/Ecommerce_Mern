@@ -1,3 +1,4 @@
+// server/controllers/user.js
 const User = require("../models/user");
 const asyncHandler = require("express-async-handler");
 const jwt = require("jsonwebtoken");
@@ -9,20 +10,15 @@ const makeToken = require("uniqid");
 // server/controllers/user.js
 
 const register = asyncHandler(async (req, res) => {
-  const { firstname, lastname, email, password, mobile  } = req.body;
+  const { firstname, lastname, email, password, mobile } = req.body;
 
-  // SỬA LẠI KHỐI NÀY
   if (!firstname || !lastname || !email || !password || !mobile) {
-    // Nếu thiếu thông tin, chỉ cần trả về response và kết thúc
     return res.status(400).json({
       success: false,
       message: "All fields are required",
     });
   }
 
-  // Nếu không thiếu thông tin, code sẽ tiếp tục chạy xuống đây
-
-  // Kiểm tra xem email đã tồn tại chưa (logic này cần được thêm vào)
   const userExists = await User.findOne({ email });
   if (userExists) {
     return res.status(400).json({
@@ -31,8 +27,7 @@ const register = asyncHandler(async (req, res) => {
     });
   }
 
-  // Nếu email chưa tồn tại, tiếp tục xử lý
-  const token = makeToken(); // Giả sử bạn có hàm này
+  const token = makeToken();
   res.cookie(
     "dataRegister",
     { ...req.body, token },
@@ -43,17 +38,17 @@ const register = asyncHandler(async (req, res) => {
 
   await sendEmail({ email, html, subject: "successful to register" });
 
-  // Trả về một response thành công ở cuối
   return res.json({
     success: true,
     message: "Please check your email to activate your account.",
   });
 });
+
 const finalRegister = asyncHandler(async (req, res) => {
   const cookie = req.cookies;
   const { token } = req.params;
   if (!cookie || cookie?.dataRegister?.token != token)
-    return res.redirect(`${process.env.CLIENT_URL}/finalRegister/failed`)
+    return res.redirect(`${process.env.CLIENT_URL}/finalRegister/failed`);
   const newUser = await User.create({
     email: cookie?.dataRegister?.email,
     password: cookie?.dataRegister?.password,
@@ -61,8 +56,9 @@ const finalRegister = asyncHandler(async (req, res) => {
     firstname: cookie?.dataRegister?.firstname,
     lastname: cookie?.dataRegister?.lastname,
   });
-  if(newUser) return res.redirect(`${process.env.CLIENT_URL}/finalRegister/success`)
-    else return res.redirect(`${process.env.CLIENT_URL}/finalRegister/failed`)
+  if (newUser)
+    return res.redirect(`${process.env.CLIENT_URL}/finalRegister/success`);
+  else return res.redirect(`${process.env.CLIENT_URL}/finalRegister/failed`);
 });
 
 const login = asyncHandler(async (req, res) => {
@@ -77,16 +73,13 @@ const login = asyncHandler(async (req, res) => {
   if (user && (await user.comparePassword(password))) {
     const token = generateToken(user);
     const refreshToken = generateRefreshToken(user);
-    // Update user's refresh token in the database
     await User.findByIdAndUpdate(user._id, { refreshToken }, { new: true });
-    // Set the refresh token as a cookie
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // Use secure cookies in production
-      sameSite: "strict", // Prevent CSRF attacks
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
-    // Return the user data and token
     return res.status(200).json({
       success: true,
       message: "Login successful",
@@ -97,7 +90,7 @@ const login = asyncHandler(async (req, res) => {
         email: user.email,
         mobile: user.mobile,
         token: token,
-        role: user.role, // Include role if needed
+        role: user.role,
       },
     });
   } else {
@@ -132,37 +125,27 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   const cookies = req.cookies;
   if (!cookies?.refreshToken) throw new Error("No refresh token in cookies");
 
-  // Bước 1: Xác thực refreshToken
   jwt.verify(
     cookies.refreshToken,
     process.env.JWT_REFRESH_SECRET,
     async (err, decode) => {
       if (err) {
-        return res
-          .status(401)
-          .json({
-            success: false,
-            message: "Invalid or expired refresh token.",
-          });
+        return res.status(401).json({
+          success: false,
+          message: "Invalid or expired refresh token.",
+        });
       }
 
-      // ---- BƯỚC CẢI THIỆN: KIỂM TRA USER CÓ TỒN TẠI KHÔNG ----
-      // Dùng ID đã giải mã để tìm user TRƯỚC KHI tạo token mới
       const user = await User.findById(decode.id);
 
       if (!user) {
-        // Nếu không tìm thấy, từ chối tạo token mới và có thể xóa cookie rác
         res.clearCookie("refreshToken", { httpOnly: true, secure: true });
-        return res
-          .status(401)
-          .json({
-            success: false,
-            message: "User for this token no longer exists.",
-          });
+        return res.status(401).json({
+          success: false,
+          message: "User for this token no longer exists.",
+        });
       }
-      // ---------------------------------------------------------
 
-      // Nếu user tồn tại, mới tạo accessToken mới
       const newAccessToken = generateToken(user);
 
       return res.status(200).json({
@@ -172,6 +155,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     }
   );
 });
+
 const logout = asyncHandler(async (req, res) => {
   const cookies = req.cookies;
   if (!cookies?.refreshToken) {
@@ -180,10 +164,8 @@ const logout = asyncHandler(async (req, res) => {
       .json({ success: true, message: "No refresh token in cookies" });
   }
 
-  // Xóa refresh token khỏi cookie
   res.clearCookie("refreshToken", { httpOnly: true, secure: true });
 
-  // Cập nhật user để xóa refresh token trong cơ sở dữ liệu
   await User.findOneAndUpdate(
     { refreshToken: cookies.refreshToken },
     { refreshToken: null }
@@ -191,18 +173,22 @@ const logout = asyncHandler(async (req, res) => {
 
   return res.status(200).json({ success: true, message: "Logout successful" });
 });
+
 // FORGOT PASSWORD
 const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.query;
   if (!email) {
-    return res.status(400).json({ success: false, message: "Email is required" });
+    return res
+      .status(400)
+      .json({ success: false, message: "Email is required" });
   }
 
   const user = await User.findOne({ email });
   if (!user) {
     return res.status(200).json({
       success: true,
-      message: "If an account with this email exists, a password reset link has been sent.",
+      message:
+        "If an account with this email exists, a password reset link has been sent.",
     });
   }
 
@@ -212,7 +198,11 @@ const forgotPassword = asyncHandler(async (req, res) => {
   const resetLink = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
   const html = `<p>Click <a href='${resetLink}'>here</a> to reset your password. This link will expire in 10 minutes.</p>`;
 
-  const emailSent = await sendEmail({ email, html, subject: "Forgot Password" });
+  const emailSent = await sendEmail({
+    email,
+    html,
+    subject: "Forgot Password",
+  });
 
   if (emailSent) {
     return res.status(200).json({
@@ -229,6 +219,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
     });
   }
 });
+
 // RESET PASSWORD
 const resetPassword = asyncHandler(async (req, res) => {
   const { password } = req.body;
@@ -265,6 +256,7 @@ const resetPassword = asyncHandler(async (req, res) => {
     message: "Password has been reset successfully.",
   });
 });
+
 const getUsers = asyncHandler(async (req, res) => {
   const users = await User.find().select("-password -refreshToken -role");
   if (!users) {
@@ -358,6 +350,231 @@ const updateUserbyAdmin = asyncHandler(async (req, res) => {
     user: updatedUser,
   });
 });
+
+// ======================= CART =======================
+
+// Helper to populate and return cart
+const getPopulatedCartForUser = async (userId) => {
+  const userPop = await User.findById(userId).populate(
+    "cart.productId",
+    "title price thumb"
+  );
+  return userPop.cart;
+};
+
+// Lấy giỏ hàng
+const getCart = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  if (!user)
+    return res.status(404).json({ success: false, message: "User not found" });
+
+  const cart = await getPopulatedCartForUser(req.user._id);
+
+  res.json({
+    success: true,
+    cart,
+  });
+});
+
+// Thêm vào giỏ hàng
+const addToCart = async (req, res) => {
+  try {
+    const { productId, quantity = 1, variants = {} } = req.body;
+    const userId = req.user._id;
+
+    if (!productId) {
+      return res.status(400).json({ success: false, msg: "Missing productId" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, msg: "User not found" });
+    }
+
+    const existingItem = user.cart.find(
+      (item) =>
+        item.productId.toString() === productId &&
+        JSON.stringify(item.variants || {}) === JSON.stringify(variants || {})
+    );
+
+    if (existingItem) {
+      existingItem.quantity += quantity;
+    } else {
+      user.cart.push({ productId, quantity, variants });
+    }
+
+    await user.save();
+
+    // ✅ Luôn populate đầy đủ field trước khi trả về
+    const populatedCart = await getPopulatedCartForUser(userId);
+
+    return res.json({
+      success: true,
+      cart: populatedCart,
+    });
+  } catch (error) {
+    console.error("Add to cart error:", error);
+    return res.status(500).json({ success: false, msg: "Server error" });
+  }
+};
+
+// Controller removeFromCart
+const removeFromCart = async (req, res) => {
+  try {
+    const { productId, variants = {} } = req.body;
+
+    if (!productId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "thiếu productId" });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    let newCart;
+    if (Object.keys(variants).length === 0) {
+      newCart = user.cart.filter(
+        (item) => item.productId.toString() !== productId.toString()
+      );
+    } else {
+      newCart = user.cart.filter(
+        (item) =>
+          item.productId.toString() !== productId.toString() ||
+          JSON.stringify(item.variants || {}) !== JSON.stringify(variants)
+      );
+    }
+
+    user.cart = newCart;
+    await user.save();
+
+    const populatedCart = await getPopulatedCartForUser(req.user._id);
+
+    return res.json({ success: true, cart: populatedCart });
+  } catch (err) {
+    console.error("❌ Remove cart error:", err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+// Cập nhật số lượng
+const updateCart = asyncHandler(async (req, res) => {
+  const { productId, variants = {}, quantity } = req.body;
+
+  if (!productId || !Number.isFinite(Number(quantity))) {
+    return res
+      .status(400)
+      .json({
+        success: false,
+        message: "productId and numeric quantity are required",
+      });
+  }
+
+  const user = await User.findById(req.user._id);
+  if (!user)
+    return res.status(404).json({ success: false, message: "User not found" });
+
+  const itemIndex = user.cart.findIndex(
+    (it) =>
+      it.productId.toString() === productId &&
+      JSON.stringify(it.variants || {}) === JSON.stringify(variants || {})
+  );
+
+  if (itemIndex === -1) {
+    return res
+      .status(404)
+      .json({ success: false, message: "Cart item not found" });
+  }
+
+  const qty = Number(quantity);
+
+  if (qty <= 0) {
+    // xóa item
+    user.cart.splice(itemIndex, 1);
+  } else {
+    user.cart[itemIndex].quantity = qty;
+  }
+
+  await user.save();
+
+  const populatedCart = await getPopulatedCartForUser(req.user._id);
+
+  res.json({ success: true, cart: populatedCart });
+});
+
+// ======================= WISHLIST =======================
+// Toggle: thêm hoặc xóa wishlist
+const toggleWishlist = asyncHandler(async (req, res) => {
+  const { productId } = req.body;
+  const userId = req.user._id;
+
+  const user = await User.findById(userId);
+  if (!user) {
+    return res.status(404).json({ success: false, message: "User not found" });
+  }
+
+  // kiểm tra có product chưa
+  const index = user.wishlist.findIndex(
+    (p) => p.toString() === productId.toString()
+  );
+
+  if (index > -1) {
+    // đã tồn tại -> xóa
+    user.wishlist.splice(index, 1);
+  } else {
+    // chưa có -> thêm
+    user.wishlist.push(productId);
+  }
+
+  await user.save();
+
+  // populate lại sau khi save
+  const updatedUser = await User.findById(userId).populate(
+    "wishlist",
+    "title price thumb slug"
+  );
+
+  res.json({ success: true, wishlist: updatedUser.wishlist });
+});
+
+// Lấy wishlist
+const getWishlist = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id).populate(
+    "wishlist",
+    "title price thumb slug"
+  );
+
+  if (!user) {
+    return res.status(404).json({ success: false, message: "User not found" });
+  }
+
+  res.json({ success: true, wishlist: user.wishlist });
+});
+
+// Xóa hẳn 1 product khỏi wishlist
+const removeFromWishlist = asyncHandler(async (req, res) => {
+  const { productId } = req.body;
+  const userId = req.user._id;
+
+  const user = await User.findByIdAndUpdate(
+    userId,
+    { $pull: { wishlist: productId } },
+    { new: true }
+  ).populate("wishlist", "title price thumb slug");
+
+  if (!user) {
+    return res.status(404).json({ success: false, message: "User not found" });
+  }
+
+  res.json({ success: true, wishlist: user.wishlist });
+});
+
 module.exports = {
   register,
   login,
@@ -371,4 +588,11 @@ module.exports = {
   updateUser,
   updateUserbyAdmin,
   finalRegister,
+  addToCart,
+  removeFromCart,
+  toggleWishlist,
+  getCart,
+  updateCart,
+  getWishlist,
+  removeFromWishlist,
 };

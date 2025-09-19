@@ -1,23 +1,37 @@
-const router = require('express').Router();
-const ctrls = require('../controllers/user');
-const { verifyToken,isAdmin } = require('../middlewares/verifyToken');
+// routes/user.js
+const router = require("express").Router();
+const ctrls = require("../controllers/user");
+const { verifyToken, isAdmin } = require("../middlewares/verifyToken");
 
-// User registration route
-router.post('/register', ctrls.register);
-router.get('/finalRegister/:token', ctrls.finalRegister);
-// User login route
-router.post('/login', ctrls.login);
-router.get('/profile',verifyToken, ctrls.getUserProfile);
-router.post('/refreshtoken', ctrls.refreshAccessToken);
-router.get('/logout', ctrls.logout);
-router.get('/forgot-password', ctrls.forgotPassword);
-router.put('/reset-password/:token', ctrls.resetPassword);
-router.use(verifyToken); // Apply verifyToken middleware to all routes below this point
+// ================= AUTH =================
+router.post("/register", ctrls.register);
+router.get("/finalRegister/:token", ctrls.finalRegister);
 
-// Get all users route (admin only)
-router.get('/', [verifyToken, isAdmin], ctrls.getUsers);
-router.delete('/:id', [isAdmin], ctrls.deleteUser);
-router.put('/:id', ctrls.updateUser);
-router.put('/:id', [isAdmin], ctrls.updateUserbyAdmin);
+router.post("/login", ctrls.login);
+router.get("/profile", verifyToken, ctrls.getUserProfile);
+
+router.post("/refreshtoken", ctrls.refreshAccessToken);
+router.get("/logout", ctrls.logout);
+
+// ================= PASSWORD =================
+router.get("/forgot-password", ctrls.forgotPassword);
+router.put("/reset-password/:token", ctrls.resetPassword);
+
+// ================= CART =================
+router.get("/cart", verifyToken, ctrls.getCart);
+router.post("/cart", verifyToken, ctrls.addToCart);
+router.put("/cart", verifyToken, ctrls.updateCart);
+router.delete("/cart", verifyToken, ctrls.removeFromCart);
+
+// ================= WISHLIST =================
+router.post("/wishlist", verifyToken, ctrls.toggleWishlist);
+router.get("/wishlist", verifyToken, ctrls.getWishlist);
+router.delete("/wishlist", verifyToken, ctrls.removeFromWishlist);
+
+// ================= USER MANAGEMENT =================
+router.get("/", [verifyToken, isAdmin], ctrls.getUsers);
+router.delete("/:id", [verifyToken, isAdmin], ctrls.deleteUser);
+router.put("/:id", verifyToken, ctrls.updateUser);
+router.put("/:id/admin", [verifyToken, isAdmin], ctrls.updateUserbyAdmin);
 
 module.exports = router;

@@ -3,14 +3,26 @@ const ctrls = require('../controllers/blog');
 const { verifyToken, isAdmin } = require('../middlewares/verifyToken');
 const uploadCloud = require('../config/cloudinary.config');
 
-router.put('/uploadImage/:id', [verifyToken, isAdmin], uploadCloud.array('images',10), ctrls.uploadImageBlog);
-router.post('/', [verifyToken, isAdmin], uploadCloud.array('images',10), ctrls.createBlog);
-router.get('/',[verifyToken], ctrls.getBlogs);
+// Upload ảnh cho blog
+router.put('/uploadImage/:id', [verifyToken, isAdmin], uploadCloud.array('images', 10), ctrls.uploadImageBlog);
+
+// Tạo blog (chỉ admin)
+router.post('/', [verifyToken, isAdmin], uploadCloud.array('images', 10), ctrls.createBlog);
+
+// Lấy danh sách blog (ai cũng xem được, không cần login)
+router.get('/', ctrls.getBlogs);
+
+// Like / Dislike blog (phải login)
 router.put('/like', verifyToken, ctrls.likeBlog);
 router.put('/dislike', verifyToken, ctrls.dislikeBlog);
-router.get('/:id',[verifyToken], ctrls.getBlogById);
-router.put('/:bid', [verifyToken, isAdmin], uploadCloud.array('images',10), ctrls.updateBlog);
-router.delete('/:id', [verifyToken, isAdmin], ctrls.deleteBlog);
 
+// Lấy chi tiết blog (ai cũng xem được, login thì kèm trạng thái like/dislike)
+router.get('/:id', ctrls.getBlogById);
+
+// Update blog (admin)
+router.put('/:bid', [verifyToken, isAdmin], uploadCloud.array('images', 10), ctrls.updateBlog);
+
+// Xoá blog (admin)
+router.delete('/:id', [verifyToken, isAdmin], ctrls.deleteBlog);
 
 module.exports = router;
