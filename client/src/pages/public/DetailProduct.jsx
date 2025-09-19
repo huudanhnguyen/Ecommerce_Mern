@@ -264,6 +264,32 @@ const DetailProduct = () => {
                 <li key={index}>{line}</li>
               ))}
           </ul>
+          {/* Variants */}
+          {product?.variants && product.variants.length > 0 && (
+            <div className="mb-6">
+              {product.variants.map((v, idx) => (
+                <div key={idx} className="mb-4">
+                  <span className="font-semibold mr-3">{v.label}:</span>
+                  <div className="flex gap-2 flex-wrap mt-2">
+                    {v.variants.map((option, i) => (
+                      <button
+                        key={i}
+                        onClick={() => handleVariantSelect(v.label, option)}
+                        className={`px-4 py-2 border rounded-md transition-colors ${
+                          selectedVariants[v.label] === option
+                            ? "bg-main text-white border-main"
+                            : "border-gray-300 text-gray-700 hover:border-main"
+                        }`}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Quantity */}
           <div className="flex items-center gap-4 mb-6">
             <span className="font-semibold">Quantity</span>
@@ -377,10 +403,7 @@ const DetailProduct = () => {
       </div>
 
       {/* Reviews */}
-<ProductReviews
-  product={product}
-  fetchProduct={fetchProduct}
-/>
+      <ProductReviews product={product} fetchProduct={fetchProduct} />
 
       {/* Gợi ý sản phẩm */}
       <div className="mt-16">
