@@ -4,6 +4,7 @@ import { formatPrice, renderRatingStars, createSlug } from "../utils/helpers";
 import SelectOptions from "./SelectOptions";
 import { Link } from "react-router-dom";
 import path from "../utils/path";
+import RatingSummary from "./RatingSummary";
 
 const Product = ({ productData, label, onQuickView }) => {
   if (!productData) return null;
@@ -65,8 +66,16 @@ const Product = ({ productData, label, onQuickView }) => {
 
         <div className="mt-1 text-lg font-semibold text-main">
           {formatPrice(productData?.price)}
-          <div className="flex items-center justify-center my-2">
-            {renderRatingStars(productData?.totalRating)}
+          <div className="flex justify-center mt-1">
+            <RatingSummary
+              averageRating={
+                productData.ratings?.length > 0
+                  ? productData.ratings.reduce((sum, r) => sum + r.star, 0) /
+                    productData.ratings.length
+                  : 0
+              }
+              showText={false}
+            />
           </div>
         </div>
       </div>

@@ -16,6 +16,8 @@ export {default as BlogPost} from './BlogPost';
 export {default as Footer} from './Footer';
 export {default as ProductFilter} from './ProductFilter';
 export {default as Pagination} from './Pagination';
+export {default as Ratings} from './Ratings';
+export {default as VoteBar} from './VoteBar';
 
 
 

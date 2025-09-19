@@ -6,6 +6,7 @@ import Breadcrumb from "../../components/Breadcrumb";
 import { useWishlist } from "../../context/WishlistContext";
 import { useCart } from "../../context/CartContext";
 import { useSelector } from "react-redux";
+import RatingSummary from "../../components/RatingSummary";
 
 import {
   FaShieldAlt,
@@ -23,11 +24,7 @@ import ProductSlider from "../../components/ProductSlider";
 import { toast } from "react-toastify";
 
 // ✅ import API user (đã fix đường dẫn)
-import {
-  apiAddToCart,
-  apiAddToWishlist,
-  apiRemoveFromWishlist,
-} from "../../apis/user";
+import { rateProduct } from "../../apis/product"; // <-- API rating bạn đã làm ở BE
 
 const DetailProduct = () => {
   const { pid } = useParams();
@@ -35,7 +32,7 @@ const DetailProduct = () => {
   const [product, setProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [mainImage, setMainImage] = useState(null);
-  const { wishlistItems, toggleWishlist , removeFromWishlist } = useWishlist();
+  const { wishlistItems, toggleWishlist, removeFromWishlist } = useWishlist();
   const { addToCart } = useCart();
   const isLoggedIn = useSelector((state) => state.user.isLoggedIn);
 
@@ -51,45 +48,48 @@ const DetailProduct = () => {
   ];
   const [activeTab, setActiveTab] = useState(tabs[0].key);
   const [selectedVariants, setSelectedVariants] = useState({});
+  const [reviewName, setReviewName] = useState("");
+  const [reviewText, setReviewText] = useState("");
+  const [reviewStar, setReviewStar] = useState(5);
 
   // ✅ fetch sản phẩm
-  useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        const response = await getProductById(pid);
-        if (response?.data?.success) {
-          const data = response.data.productData;
+  const fetchProduct = async () => {
+    try {
+      const response = await getProductById(pid);
+      if (response?.data?.success) {
+        const data = response.data.productData;
 
-          const flatImages = Array.isArray(data.images?.[0])
-            ? data.images[0]
-            : data.images || [];
+        const flatImages = Array.isArray(data.images?.[0])
+          ? data.images[0]
+          : data.images || [];
 
-          const allImgs =
-            flatImages?.length > 0
-              ? flatImages.includes(data.thumb)
-                ? flatImages
-                : [data.thumb, ...flatImages]
-              : [data.thumb];
+        const allImgs =
+          flatImages?.length > 0
+            ? flatImages.includes(data.thumb)
+              ? flatImages
+              : [data.thumb, ...flatImages]
+            : [data.thumb];
 
-          setProduct({ ...data, allImages: allImgs });
-          setMainImage(allImgs[0]);
+        setProduct({ ...data, allImages: allImgs });
+        setMainImage(allImgs[0]);
 
-          // chọn mặc định variants đầu tiên
-          if (data.variants && data.variants.length > 0) {
-            const initialVariants = {};
-            data.variants.forEach((v) => {
-              if (v.variants && v.variants.length > 0) {
-                initialVariants[v.label] = v.variants[0];
-              }
-            });
-            setSelectedVariants(initialVariants);
-          }
+        // chọn mặc định variants đầu tiên
+        if (data.variants && data.variants.length > 0) {
+          const initialVariants = {};
+          data.variants.forEach((v) => {
+            if (v.variants && v.variants.length > 0) {
+              initialVariants[v.label] = v.variants[0];
+            }
+          });
+          setSelectedVariants(initialVariants);
         }
-      } catch (error) {
-        console.error("Lỗi fetch sản phẩm:", error);
       }
-    };
+    } catch (error) {
+      console.error("Lỗi fetch sản phẩm:", error);
+    }
+  };
 
+  useEffect(() => {
     if (pid) fetchProduct();
   }, [pid]);
 
@@ -123,52 +123,84 @@ const DetailProduct = () => {
   };
 
   // ✅ thêm vào cart (context + DB)
-const handleAddToCart = () => {
-  if (!product) return;
+  const handleAddToCart = () => {
+    if (!product) return;
 
-  checkLoginAndPerformAction(async () => {
-    try {
-      // Gọi trực tiếp hàm context (đã có API call bên trong CartContext)
-      await addToCart(product, quantity, selectedVariants);
-
-      toast.success("🛒 Added to cart!", { position: "top-left" });
-    } catch (err) {
-      console.error("Add to cart failed:", err);
-      toast.error("Failed to add to cart!");
-    }
-  });
-};
-
-
-const handleToggleWishlist = () => {
-  if (!product) return;
-
-  checkLoginAndPerformAction(async () => {
-    try {
-      if (isInWishlist) {
-        await removeFromWishlist(product._id); // chỉ gọi context
-        toast.info("❌ Removed from favorites list");
-      } else {
-        await toggleWishlist ({
-          _id: product._id,
-          title: product.title,
-          price: product.price,
-          thumb: product.thumb,
-        }); // chỉ gọi context
-        toast.success("❤️ Added to favorites list");
+    checkLoginAndPerformAction(async () => {
+      try {
+        await addToCart(product, quantity, selectedVariants);
+        toast.success("🛒 Added to cart!", { position: "top-left" });
+      } catch (err) {
+        console.error("Add to cart failed:", err);
+        toast.error("Failed to add to cart!");
       }
-    } catch (err) {
-      console.error("Wishlist update failed:", err);
-      toast.error("Failed to update wishlist!");
+    });
+  };
+
+  const handleToggleWishlist = () => {
+    if (!product) return;
+
+    checkLoginAndPerformAction(async () => {
+      try {
+        if (isInWishlist) {
+          await removeFromWishlist(product._id);
+          toast.info("❌ Removed from favorites list");
+        } else {
+          await toggleWishlist({
+            _id: product._id,
+            title: product.title,
+            price: product.price,
+            thumb: product.thumb,
+          });
+          toast.success("❤️ Added to favorites list");
+        }
+      } catch (err) {
+        console.error("Wishlist update failed:", err);
+        toast.error("Failed to update wishlist!");
+      }
+    });
+  };
+
+  // ✅ gửi đánh giá
+  const handleSubmitReview = () => {
+    if (!reviewText.trim()) {
+      toast.warn("Please write something before submitting!");
+      return;
     }
-  });
-};
+
+    checkLoginAndPerformAction(async () => {
+      try {
+        await rateProduct({
+          productId: product._id,
+          star: reviewStar,
+          comment: reviewText,
+          name: reviewName,
+        });
+        toast.success("✅ Review submitted!");
+        setReviewName("");
+        setReviewText("");
+        setReviewStar(5);
+        fetchProduct(); // reload dữ liệu mới
+      } catch (err) {
+        console.error("Submit review failed:", err);
+        toast.error("Failed to submit review!");
+      }
+    });
+  };
 
   const isVariantSelected =
     !product?.variants ||
     product.variants.every((v) => selectedVariants[v.label]);
 
   if (!product) return <div>Loading...</div>;
+
+  // ✅ tính rating trung bình
+  const averageRating =
+    product?.ratings && product.ratings.length > 0
+      ? product.ratings.reduce((sum, r) => sum + r.star, 0) /
+        product.ratings.length
+      : 0;
+  const totalReviews = product?.ratings?.length || 0;
 
   return (
     <div className="w-main mx-auto my-8">
@@ -257,12 +289,16 @@ const handleToggleWishlist = () => {
             </p>
           </div>
 
-          <div className="flex items-center gap-2 text-sm mb-6">
-            <div className="flex items-center text-yellow-400">
-              {renderRatingStars(product.totalRating)}
-            </div>
-            <span className="text-gray-600 italic">(Sold: {product.sold})</span>
+          {/* ⭐ Rating summary */}
+          <div className="flex items-center gap-4 text-sm mb-6">
+            <RatingSummary
+              averageRating={averageRating}
+              totalReviews={totalReviews}
+              size="lg"
+            />
+            <span className="text-gray-600 italic">Sold: {product.sold}</span>
           </div>
+
           <ul className="list-disc list-inside text-sm text-gray-600 mb-4 space-y-1">
             {product.description
               ?.filter((line) => !line.toLowerCase().startsWith("thumbnail:"))
@@ -297,11 +333,17 @@ const handleToggleWishlist = () => {
           <div className="flex items-center gap-4 mb-6">
             <span className="font-semibold">Quantity</span>
             <div className="flex items-center border rounded">
-              <button onClick={() => handleQuantity("decrease")} className="p-3">
+              <button
+                onClick={() => handleQuantity("decrease")}
+                className="p-3"
+              >
                 <FaMinus size={12} />
               </button>
               <span className="px-4">{quantity}</span>
-              <button onClick={() => handleQuantity("increase")} className="p-3">
+              <button
+                onClick={() => handleQuantity("increase")}
+                className="p-3"
+              >
                 <FaPlus size={12} />
               </button>
             </div>
@@ -411,6 +453,71 @@ const handleToggleWishlist = () => {
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* Reviews */}
+      <div className="mt-16">
+        <h2 className="text-xl font-bold mb-4">Customer Reviews</h2>
+
+        {/* List */}
+        {product.ratings && product.ratings.length > 0 ? (
+          <div className="space-y-4">
+            {product.ratings.map((r, i) => (
+              <div key={i} className="border-b pb-3">
+                <div className="flex items-center gap-2">
+                  {renderRatingStars(r.star)}
+                  <span className="font-semibold">{r.name || "Anonymous"}</span>
+                  <span className="text-sm text-gray-500">
+                    {new Date(r.postedAt).toLocaleDateString()}
+                  </span>
+                </div>
+                <p className="text-gray-700">{r.comment}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-500">No reviews yet.</p>
+        )}
+
+        {/* Form */}
+        <div className="mt-6">
+          <h3 className="font-semibold mb-2">Write a review</h3>
+          <input
+            type="text"
+            value={reviewName}
+            onChange={(e) => setReviewName(e.target.value)}
+            className="w-full border rounded p-2 mb-3"
+            placeholder="Your name"
+          />
+
+          <div className="flex items-center gap-2 mb-3">
+            <span>Rating:</span>
+            {[1, 2, 3, 4, 5].map((s) => (
+              <button
+                key={s}
+                onClick={() => setReviewStar(s)}
+                className={`text-xl ${
+                  s <= reviewStar ? "text-yellow-400" : "text-gray-300"
+                }`}
+              >
+                ★
+              </button>
+            ))}
+          </div>
+          <textarea
+            value={reviewText}
+            onChange={(e) => setReviewText(e.target.value)}
+            className="w-full border rounded p-2 mb-3"
+            placeholder="Write your review..."
+            rows={3}
+          />
+          <button
+            onClick={handleSubmitReview}
+            className="px-4 py-2 bg-main text-white rounded hover:bg-opacity-90"
+          >
+            Submit Review
+          </button>
         </div>
       </div>
 
