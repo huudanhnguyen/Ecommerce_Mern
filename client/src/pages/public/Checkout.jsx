@@ -2,9 +2,11 @@
 import React, { useState } from "react";
 import { useCart } from "../../context/CartContext";
 import { formatPrice } from "../../utils/helpers";
+import { useNavigate } from "react-router-dom";
 
 const Checkout = () => {
   const { cartItems } = useCart();
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -19,13 +21,18 @@ const Checkout = () => {
     nameOnCard: "",
   });
 
+  // Nếu giỏ hàng rỗng thì chuyển về trang cart
+  if (!cartItems || cartItems.length === 0) {
+    navigate("/cart");
+    return null;
+  }
+
   const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
+    (sum, item) => sum + (item?.productId?.price ?? item.price) * item.quantity,
     0
   );
-  const shippingFee = 20.0;
-  const estimatedTax = subtotal * 0.1;
-  const total = subtotal + shippingFee + estimatedTax;
+  const shippingFee = 3000000;
+  const total = subtotal + shippingFee;
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -33,11 +40,12 @@ const Checkout = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Order placed:", { formData, cartItems });
+    console.log("✅ Order placed:", { formData, cartItems });
+    // 👉 sau này call API tạo đơn hàng ở đây
   };
 
   return (
-    <div className="w-full flex justify-center px-8 py-6">
+    <div className="w-main flex justify-center px-8 py-6">
       {/* Left form */}
       <form
         onSubmit={handleSubmit}
@@ -146,24 +154,42 @@ const Checkout = () => {
       {/* Right summary */}
       <div className="w-1/3 pl-10">
         <h2 className="text-xl font-semibold mb-4">Your Order</h2>
+        
         <ul className="space-y-4">
-          {cartItems.map((item) => (
-            <li key={item._id} className="flex justify-between items-center">
-              <div>
-                <p className="font-medium">{item.title}</p>
-                {item.variants && (
-                  <p className="text-sm text-gray-500">
-                    {Object.entries(item.variants)
-                      .map(([k, v]) => `${k}: ${v}`)
-                      .join(" • ")}
-                  </p>
-                )}
-                <p className="text-sm">x{item.quantity}</p>
-              </div>
-              <span>{formatPrice(item.price * item.quantity)}</span>
-            </li>
-          ))}
+          {cartItems.map((item, index) => {
+            const product = item?.productId || {};
+            const price = product?.price ?? item.price ?? 0;
+            const title = product?.title ?? "Product";
+            const thumb = product?.thumb ?? "/no-image.png";
+            const variants = item.variants ?? {};
+            const key = `${product._id || item._id}-${index}`;
+
+            return (
+              <li key={key} className="flex justify-between items-center">
+                <div>
+                  <img
+                    src={thumb}
+                    alt={title}
+                    className="w-16 h-16 object-cover mb-2"
+                  />
+                </div>
+                <div className="flex-grow px-4">
+                  <p className="font-medium">{title}</p>
+                  {Object.keys(variants).length > 0 && (
+                    <p className="text-sm text-gray-500">
+                      {Object.entries(variants)
+                        .map(([k, v]) => `${k}: ${v}`)
+                        .join(" • ")}
+                    </p>
+                  )}
+                  <p className="text-sm">x{item.quantity}</p>
+                </div>
+                <span>{formatPrice(price * item.quantity)}</span>
+              </li>
+            );
+          })}
         </ul>
+
         <div className="mt-6 space-y-2 text-sm">
           <div className="flex justify-between">
             <span>Subtotal</span>
@@ -172,10 +198,6 @@ const Checkout = () => {
           <div className="flex justify-between">
             <span>Shipping</span>
             <span>{formatPrice(shippingFee)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Estimated Tax</span>
-            <span>{formatPrice(estimatedTax)}</span>
           </div>
           <div className="flex justify-between font-bold text-lg pt-2 border-t">
             <span>Total</span>
