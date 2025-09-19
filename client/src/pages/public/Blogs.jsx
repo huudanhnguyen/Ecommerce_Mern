@@ -22,7 +22,7 @@ const BlogList = () => {
   }, [currentPage]);
 
   return (
-    <div>
+    <div className="w-main max-w-6xl mx-auto px-4 py-10">
       <Breadcrumb />
 
       {/* Blog Grid */}

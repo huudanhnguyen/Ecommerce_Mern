@@ -21,9 +21,10 @@ export const navigation = [
         value:'OUR SERVICES',
         path: `/${path.OUR_SERVICES}`
     },
+
     {
         id:5,
-        value:'FAQs',
-        path: `/${path.FAQs}`
-    },
+        value:'CONTACT US',
+        path: `/${path.CONTACT_US}`
+    }
 ]

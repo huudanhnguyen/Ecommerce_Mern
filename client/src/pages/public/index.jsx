@@ -14,6 +14,7 @@ export {default as FinalRegister} from './FinalRegister';
 export {default as SearchResult} from './SearchResult';
 export {default as WishlistPage} from './WishlistPage';
 export {default as BlogDetail} from './BlogDetail';
+export {default as ContactUs} from './ContactUs';
 
 
 

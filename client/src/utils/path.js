@@ -10,7 +10,6 @@ const path = {
   PRODUCT_CATEGORY: "product/:category",
   BLOGS: "blogs",
   OUR_SERVICES: "our-services",
-  FAQs: "faqs",
   REGISTER: "register",
   FINAL_REGISTER: "finalRegister/:status",
   FORGOT_PASSWORD: "forgot-password",
@@ -24,7 +23,7 @@ const path = {
   VERIFY_PENDING: "verify-pending",
   CART_SIDEBAR: "",
   DETAIL_BLOG__ID: "blog/:id",
-  
+  CONTACT_US: "contact-us",
 };
 
 export default path;

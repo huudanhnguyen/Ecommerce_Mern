@@ -191,7 +191,7 @@ export default function ProductList() {
   if (loading) return <p className="text-center">Loading products...</p>;
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="w-main p-6 max-w-7xl mx-auto">
       <Breadcrumb />
 
       {/* Filter bar */}

@@ -11,7 +11,6 @@ import FinalRegister from "./pages/public/FinalRegister";
 import Products from "./pages/public/Products";
 import DetailProduct from "./pages/public/DetailProduct";
 import Blogs from "./pages/public/Blogs";
-import FAQs from "./pages/public/FAQs";
 import OurServices from "./pages/public/OurServices";
 import ForgotPassword from "./pages/public/ForgotPassword";
 import ResetPassword from "./pages/public/ResetPassword";
@@ -19,11 +18,11 @@ import SearchResult from "./pages/public/SearchResult";
 import MyAccount from "./pages/member/MyAccount";
 import Profile from "./pages/member/Profile";
 import Orders from "./pages/member/Orders";
-// import Wishlist from "./pages/member/Wishlist";
 import CartPage from "./pages/public/CartPage";
 import Wishlist from "./pages/public/WishlistPage";
 import Checkout from "./pages/public/Checkout";
 import BlogDetail from "./pages/public/BlogDetail";
+import ContactUs from "./pages/public/ContactUs";
 
 function App() {
   return (
@@ -48,7 +47,7 @@ function App() {
         <Route path={path.BLOGS} element={<Blogs />} />
         <Route path={path.DETAIL_BLOG__ID} element={<BlogDetail />} />
         <Route path={path.OUR_SERVICES} element={<OurServices />} />
-        <Route path={path.FAQs} element={<FAQs />} />
+        <Route path={path.CONTACT_US} element={<ContactUs />} />
         <Route path="/search" element={<SearchResult />} />
 
         {/* nested routes cho MyAccount */}
@@ -56,7 +55,6 @@ function App() {
           <Route index element={<Profile />} />
           <Route path="profile" element={<Profile />} />
           <Route path="orders" element={<Orders />} />
-          {/* <Route path="wishlist" element={<Wishlist />} /> */}
         </Route>
 
         <Route path={path.NOT_FOUND} element={<Home />} />

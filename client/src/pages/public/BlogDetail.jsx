@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getApiBlogDetail, likeBlog, dislikeBlog } from "../../apis/blog";
+import Breadcrumb from "../../components/Breadcrumb";
 
 const BlogDetail = () => {
   const { id } = useParams(); // URL: /blog/:id
@@ -50,6 +51,7 @@ const BlogDetail = () => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-10">
+        <Breadcrumb />
       <h1 className="text-3xl font-bold mb-4">{blog.title}</h1>
       <p className="text-gray-400 text-sm mb-6">
         By {blog.author?.firstName || "Admin"} •{" "}
