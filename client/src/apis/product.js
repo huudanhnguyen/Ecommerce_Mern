@@ -32,5 +32,5 @@ export const rateProduct = ({ productId, star, comment, name }) =>
 export const getProductRatings = (pid) =>
   axios({
     url: `/product/${pid}/ratings`,
-    method: 'get',
+    method: 'GET',
   });

@@ -1,8 +1,14 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { formatPrice, renderRatingStars, createSlug, getProductLabel } from "../utils/helpers"; 
+import {
+  formatPrice,
+  renderRatingStars,
+  createSlug,
+  getProductLabel,
+} from "../utils/helpers";
 import SelectOptions from "./SelectOptions";
 import path from "../utils/path";
+import RatingSummary from "./RatingSummary";
 
 const ProductCardFormat = ({ productData, onQuickView }) => {
   if (!productData) return null;
@@ -20,7 +26,11 @@ const ProductCardFormat = ({ productData, onQuickView }) => {
   const label = getProductLabel(productData); // ✅ dùng từ helper
 
   const labelColor =
-    label === "TRENDING" ? "bg-blue-500" : label === "NEW" ? "bg-green-500" : "";
+    label === "TRENDING"
+      ? "bg-blue-500"
+      : label === "NEW"
+      ? "bg-green-500"
+      : "";
 
   return (
     <div className="w-full border rounded-md overflow-hidden relative group text-center">
@@ -57,7 +67,15 @@ const ProductCardFormat = ({ productData, onQuickView }) => {
         </div>
 
         <div className="flex items-center justify-center my-2">
-          {renderRatingStars(productData?.totalRating)}
+          <RatingSummary
+            averageRating={
+              productData.ratings?.length > 0
+                ? productData.ratings.reduce((sum, r) => sum + r.star, 0) /
+                  productData.ratings.length
+                : 0
+            }
+            showText={false}
+          />
         </div>
       </div>
     </div>

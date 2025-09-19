@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getProductById } from "../../apis/product";
-import { formatPrice, renderRatingStars } from "../../utils/helpers";
+import { getProductById, rateProduct } from "../../apis/product";
+import { formatPrice } from "../../utils/helpers";
 import Breadcrumb from "../../components/Breadcrumb";
 import { useWishlist } from "../../context/WishlistContext";
 import { useCart } from "../../context/CartContext";
 import { useSelector } from "react-redux";
 import RatingSummary from "../../components/RatingSummary";
+import ProductReviews from "../../components/ProductReviews";
 
 import {
   FaShieldAlt,
@@ -22,9 +23,6 @@ import {
 } from "react-icons/fa";
 import ProductSlider from "../../components/ProductSlider";
 import { toast } from "react-toastify";
-
-// ✅ import API user (đã fix đường dẫn)
-import { rateProduct } from "../../apis/product"; // <-- API rating bạn đã làm ở BE
 
 const DetailProduct = () => {
   const { pid } = useParams();
@@ -122,7 +120,7 @@ const DetailProduct = () => {
     }
   };
 
-  // ✅ thêm vào cart (context + DB)
+  // ✅ thêm vào cart
   const handleAddToCart = () => {
     if (!product) return;
 
@@ -163,18 +161,13 @@ const DetailProduct = () => {
 
   // ✅ gửi đánh giá
   const handleSubmitReview = () => {
-    if (!reviewText.trim()) {
-      toast.warn("Please write something before submitting!");
-      return;
-    }
-
     checkLoginAndPerformAction(async () => {
       try {
         await rateProduct({
           productId: product._id,
           star: reviewStar,
-          comment: reviewText,
-          name: reviewName,
+          comment: reviewText || "", // không bắt buộc
+          name: reviewName || "", // không bắt buộc
         });
         toast.success("✅ Review submitted!");
         setReviewName("");
@@ -222,16 +215,6 @@ const DetailProduct = () => {
 
           {/* Thumbnails */}
           <div className="relative mt-4">
-            <button
-              onClick={() => {
-                const container = document.getElementById("thumbs-container");
-                if (container) container.scrollLeft -= 120;
-              }}
-              className="absolute left-0 top-1/2 -translate-y-1/2 bg-white shadow p-2 rounded-full z-10"
-            >
-              ◀
-            </button>
-
             <div
               id="thumbs-container"
               className="flex gap-2 overflow-x-auto scrollbar-hide px-8"
@@ -252,36 +235,12 @@ const DetailProduct = () => {
                 </div>
               ))}
             </div>
-
-            <button
-              onClick={() => {
-                const container = document.getElementById("thumbs-container");
-                if (container) container.scrollLeft += 120;
-              }}
-              className="absolute right-0 top-1/2 -translate-y-1/2 bg-white shadow p-2 rounded-full z-10"
-            >
-              ▶
-            </button>
           </div>
         </div>
 
         {/* Cột giữa: Thông tin sản phẩm */}
         <div className="md:col-span-3">
           <h1 className="text-3xl font-bold mb-2">{product.title}</h1>
-
-          {Object.keys(selectedVariants).length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-2">
-              {Object.entries(selectedVariants).map(([label, value]) => (
-                <span
-                  key={label}
-                  className="px-3 py-1 bg-gray-100 border border-gray-300 rounded-full text-sm text-gray-700"
-                >
-                  {label}:{" "}
-                  <span className="font-semibold text-main">{value}</span>
-                </span>
-              ))}
-            </div>
-          )}
 
           <div className="flex justify-between items-center mb-2">
             <p className="text-3xl font-bold text-main">
@@ -298,7 +257,6 @@ const DetailProduct = () => {
             />
             <span className="text-gray-600 italic">Sold: {product.sold}</span>
           </div>
-
           <ul className="list-disc list-inside text-sm text-gray-600 mb-4 space-y-1">
             {product.description
               ?.filter((line) => !line.toLowerCase().startsWith("thumbnail:"))
@@ -306,29 +264,6 @@ const DetailProduct = () => {
                 <li key={index}>{line}</li>
               ))}
           </ul>
-
-          {/* Variants */}
-          {product.variants?.map((v) => (
-            <div key={v.label} className="mb-4">
-              <span className="font-semibold">{v.label}</span>
-              <div className="flex gap-2 mt-2">
-                {v.variants.map((option) => (
-                  <button
-                    key={option}
-                    onClick={() => handleVariantSelect(v.label, option)}
-                    className={`px-4 py-1 border rounded ${
-                      selectedVariants[v.label] === option
-                        ? "border-main bg-main text-white"
-                        : "border-gray-300"
-                    }`}
-                  >
-                    {option}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-
           {/* Quantity */}
           <div className="flex items-center gap-4 mb-6">
             <span className="font-semibold">Quantity</span>
@@ -350,7 +285,6 @@ const DetailProduct = () => {
           </div>
 
           <div className="flex gap-3">
-            {/* Add to Cart */}
             <button
               onClick={handleAddToCart}
               disabled={!isVariantSelected}
@@ -364,7 +298,6 @@ const DetailProduct = () => {
               ADD TO CART
             </button>
 
-            {/* Wishlist */}
             <button
               onClick={handleToggleWishlist}
               className={`flex-1 flex items-center justify-center gap-2 font-bold py-3 rounded-md transition-colors
@@ -376,19 +309,6 @@ const DetailProduct = () => {
             >
               {isInWishlist ? "REMOVE WISHLIST" : "ADD TO WISHLIST"}
             </button>
-          </div>
-
-          {/* Social */}
-          <div className="flex gap-2 mt-4">
-            <a href="#" className="p-3 bg-gray-800 text-white rounded-full">
-              <FaFacebookF />
-            </a>
-            <a href="#" className="p-3 bg-gray-800 text-white rounded-full">
-              <FaTwitter />
-            </a>
-            <a href="#" className="p-3 bg-gray-800 text-white rounded-full">
-              <FaPinterestP />
-            </a>
           </div>
         </div>
 
@@ -457,69 +377,10 @@ const DetailProduct = () => {
       </div>
 
       {/* Reviews */}
-      <div className="mt-16">
-        <h2 className="text-xl font-bold mb-4">Customer Reviews</h2>
-
-        {/* List */}
-        {product.ratings && product.ratings.length > 0 ? (
-          <div className="space-y-4">
-            {product.ratings.map((r, i) => (
-              <div key={i} className="border-b pb-3">
-                <div className="flex items-center gap-2">
-                  {renderRatingStars(r.star)}
-                  <span className="font-semibold">{r.name || "Anonymous"}</span>
-                  <span className="text-sm text-gray-500">
-                    {new Date(r.postedAt).toLocaleDateString()}
-                  </span>
-                </div>
-                <p className="text-gray-700">{r.comment}</p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-500">No reviews yet.</p>
-        )}
-
-        {/* Form */}
-        <div className="mt-6">
-          <h3 className="font-semibold mb-2">Write a review</h3>
-          <input
-            type="text"
-            value={reviewName}
-            onChange={(e) => setReviewName(e.target.value)}
-            className="w-full border rounded p-2 mb-3"
-            placeholder="Your name"
-          />
-
-          <div className="flex items-center gap-2 mb-3">
-            <span>Rating:</span>
-            {[1, 2, 3, 4, 5].map((s) => (
-              <button
-                key={s}
-                onClick={() => setReviewStar(s)}
-                className={`text-xl ${
-                  s <= reviewStar ? "text-yellow-400" : "text-gray-300"
-                }`}
-              >
-                ★
-              </button>
-            ))}
-          </div>
-          <textarea
-            value={reviewText}
-            onChange={(e) => setReviewText(e.target.value)}
-            className="w-full border rounded p-2 mb-3"
-            placeholder="Write your review..."
-            rows={3}
-          />
-          <button
-            onClick={handleSubmitReview}
-            className="px-4 py-2 bg-main text-white rounded hover:bg-opacity-90"
-          >
-            Submit Review
-          </button>
-        </div>
-      </div>
+<ProductReviews
+  product={product}
+  fetchProduct={fetchProduct}
+/>
 
       {/* Gợi ý sản phẩm */}
       <div className="mt-16">

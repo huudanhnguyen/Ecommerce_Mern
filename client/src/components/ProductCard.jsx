@@ -4,6 +4,7 @@ import { FaHeart } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import path from "../utils/path";
 import { useWishlistActions } from "../hooks/useWishlistActions";
+import RatingSummary from "./RatingSummary.jsx";
 
 const ProductCard = ({ productData }) => {
   if (!productData) return null;
@@ -43,7 +44,15 @@ const ProductCard = ({ productData }) => {
         </Link>
         <p className="text-gray-500 mt-1">{formatPrice(productData.price)}</p>
         <div className="flex items-center text-sm text-gray-500 mt-1">
-          {renderRatingStars(productData.totalRating)}
+                      <RatingSummary
+              averageRating={
+                productData.ratings?.length > 0
+                  ? productData.ratings.reduce((sum, r) => sum + r.star, 0) /
+                    productData.ratings.length
+                  : 0
+              }
+              showText={false}
+            />
         </div>
 
         {/* Icon hành động */}
