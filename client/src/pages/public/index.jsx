@@ -13,6 +13,7 @@ export {default as OurServices} from './OurServices';
 export {default as FinalRegister} from './FinalRegister';
 export {default as SearchResult} from './SearchResult';
 export {default as WishlistPage} from './WishlistPage';
+export {default as BlogDetail} from './BlogDetail';
 
 
 

@@ -23,6 +23,7 @@ const path = {
   VERIFY_EMAIL: "finalRegister/:token",
   VERIFY_PENDING: "verify-pending",
   CART_SIDEBAR: "",
+  DETAIL_BLOG__ID: "blog/:id",
   
 };
 
