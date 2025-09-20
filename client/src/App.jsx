@@ -2,7 +2,7 @@ import React from "react";
 import { Routes, Route } from "react-router-dom";
 import path from "./utils/path";
 
-// import các page
+// import các page public
 import Public from "./pages/public/Public";
 import Home from "./pages/public/Home";
 import Login from "./pages/public/Login";
@@ -24,11 +24,25 @@ import Checkout from "./pages/public/Checkout";
 import BlogDetail from "./pages/public/BlogDetail";
 import ContactUs from "./pages/public/ContactUs";
 
+// import các page admin
+import Dashboard from "./pages/private/Dashboard";
+import Users from "./pages/private/Users";
+import ProductsAdmin from "./pages/private/Products/ProductList";
+import Settings from "./pages/private/Settings";
+import Analytics from "./pages/private/Analytics";
+import AdminLayout from "./pages/private/AdminLayout";
+import ProductCreate from "./pages/private/Products/ProductCreate";
+import ProductEdit from "./pages/private/Products/ProductEdit";
+import ProductList from "./pages/private/Products/ProductList";
+
+// import route bảo vệ admin
+import AdminRoute from "./components/Admin/AdminRoute";
+
 function App() {
   return (
     <Routes>
+      {/* ========== Public Routes ========== */}
       <Route path="/" element={<Public />}>
-        {/* public routes */}
         <Route index element={<Home />} />
         <Route path={path.LOGIN} element={<Login />} />
         <Route path={path.REGISTER} element={<Register />} />
@@ -58,6 +72,20 @@ function App() {
         </Route>
 
         <Route path={path.NOT_FOUND} element={<Home />} />
+      </Route>
+
+      {/* ========== Admin Routes (chỉ admin mới vào được) ========== */}
+      <Route element={<AdminRoute />}>
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route path={path.ADMIN_DASHBOARD} element={<Dashboard />} />
+          <Route path={path.ADMIN_USERS} element={<Users />} />
+          <Route path={path.ADMIN_PRODUCTS} element={<ProductsAdmin />} />
+          <Route path={path.ADMIN_SETTINGS} element={<Settings />} />
+          <Route path={path.ADMIN_ANALYTICS} element={<Analytics />} />
+          <Route path={path.ADMIN_PRODUCTS_CREATE} element={<ProductCreate />} />
+          <Route path={path.ADMIN_PRODUCTS_EDIT__ID} element={<ProductEdit />} />
+          <Route path={path.ADMIN_PRODUCTS_LIST} element={<ProductList />} />
+        </Route>
       </Route>
     </Routes>
   );

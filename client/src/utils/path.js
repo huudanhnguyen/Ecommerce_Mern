@@ -1,4 +1,5 @@
 const path = {
+  // ===== PUBLIC =====
   PUBLIC: "/",
   HOME: "home",
   LOGIN: "login",
@@ -24,6 +25,16 @@ const path = {
   CART_SIDEBAR: "",
   DETAIL_BLOG__ID: "blog/:id",
   CONTACT_US: "contact-us",
+
+  // ===== ADMIN =====
+  ADMIN_DASHBOARD: "/admin/dashboard",
+  ADMIN_USERS: "/admin/users",
+  ADMIN_PRODUCTS: "/admin/products",
+  ADMIN_SETTINGS: "/admin/settings",
+  ADMIN_ANALYTICS: "/admin/analytics",
+  ADMIN_PRODUCTS_CREATE: "/admin/products/create",
+  ADMIN_PRODUCTS_EDIT__ID: "/admin/products/edit/:id",
+  ADMIN_PRODUCTS_LIST: "/admin/products/list",
 };
 
 export default path;
