@@ -140,6 +140,14 @@ const BlogList = () => {
             <span className="hidden sm:inline">Add Blog</span>
             <span className="sm:hidden">Add</span>
           </Link>
+          <Link
+            to="/admin/blog-categories"
+            className="flex items-center gap-2 px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-sm flex-1 min-w-0 justify-center"
+          >
+            <FileText size={16} /> 
+            <span className="hidden sm:inline">Categories</span>
+            <span className="sm:hidden">Cat</span>
+          </Link>
           <button className="flex items-center gap-2 px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-sm flex-1 min-w-0 justify-center">
             <Upload size={16} /> 
             <span className="hidden sm:inline">Import</span>

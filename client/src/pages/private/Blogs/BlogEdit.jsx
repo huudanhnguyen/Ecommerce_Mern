@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import BlogForm from "../../../components/Admin/BlogForm";
 import { getBlogById, updateBlog } from "../../../apis/blog";
-import { buildFormData } from "../../../utils/buildFormData";
+import { buildBlogFormData } from "../../../utils/buildBlogFormData";
 
 // Chuẩn hóa dữ liệu từ backend -> form
 const normalizeBlogData = (data) => {
@@ -57,7 +57,7 @@ const BlogEdit = () => {
   const handleSubmit = async (values) => {
     try {
       setSubmitting(true);
-      const formData = buildFormData(values);
+      const formData = buildBlogFormData(values);
 
       const res = await updateBlog(id, formData, {
         headers: { "Content-Type": "multipart/form-data" },

@@ -8,21 +8,19 @@ const banner2Url = "https://digital-world-2.myshopify.com/cdn/shop/files/promo-2
 
 const AdBanners = () => {
     return (
-        <div className='w-full grid grid-cols-1 md:grid-cols-2 gap-5'>
-            <a href="#" className='block'>
-                {/* Sử dụng biến chứa URL */}
+        <div className='w-full grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5'>
+            <a href="#" className='block group overflow-hidden rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300'>
                 <img 
                     src={banner1Url} 
                     alt="Discover the new watch" 
-                    className='w-full h-auto object-cover rounded-md'
+                    className='w-full h-32 sm:h-40 lg:h-48 object-cover group-hover:scale-105 transition-transform duration-300'
                 />
             </a>
-            <a href="#" className='block'>
-                {/* Sử dụng biến chứa URL */}
+            <a href="#" className='block group overflow-hidden rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300'>
                 <img 
                     src={banner2Url} 
                     alt="We're launching exclusive phone" 
-                    className='w-full h-auto object-cover rounded-md'
+                    className='w-full h-32 sm:h-40 lg:h-48 object-cover group-hover:scale-105 transition-transform duration-300'
                 />
             </a>
         </div>

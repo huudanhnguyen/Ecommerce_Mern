@@ -28,26 +28,26 @@ const Product = ({ productData, label, onQuickView }) => {
   };
 
   return (
-    <div className="w-full border rounded-md overflow-hidden relative group text-center">
+    <div className="w-full border rounded-lg overflow-hidden relative group text-center shadow-sm hover:shadow-md transition-shadow duration-300 bg-white">
       {/* --- Phần hình ảnh --- */}
       <Link
-        className="w-full h-[250px] overflow-hidden"
+        className="w-full h-48 sm:h-56 lg:h-64 overflow-hidden block"
         to={detailUrl}
         onClick={handleClick}
       >
         <img
           src={imageUrl}
           alt={productName}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
       </Link>
 
       {/* --- Phần nhãn (NEW/TRENDING) --- */}
       {label && (
         <div
-          className={`absolute top-2 right-[-1px] text-white text-xs font-semibold px-3 py-1 ${labelColor} flex items-center gap-1`}
+          className={`absolute top-2 right-2 text-white text-xs font-semibold px-2 py-1 rounded-full ${labelColor} flex items-center gap-1 shadow-sm`}
         >
-          <span className="w-2 h-2 bg-white rounded-full"></span>
+          <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
           {label}
         </div>
       )}
@@ -55,18 +55,18 @@ const Product = ({ productData, label, onQuickView }) => {
       <SelectOptions onQuickView={onQuickView} productData={productData} />
 
       {/* --- Phần thông tin sản phẩm --- */}
-      <div className="p-4">
+      <div className="p-3 sm:p-4">
         <Link
-          className="text-lg font-semibold truncate"
+          className="text-sm sm:text-base lg:text-lg font-semibold truncate block hover:text-main transition-colors duration-200"
           to={detailUrl}
           onClick={handleClick}
         >
           {productName}
         </Link>
 
-        <div className="mt-1 text-lg font-semibold text-main">
+        <div className="mt-2 text-base sm:text-lg font-semibold text-main">
           {formatPrice(productData?.price)}
-          <div className="flex justify-center mt-1">
+          <div className="flex justify-center mt-2">
             <RatingSummary
               averageRating={
                 productData.ratings?.length > 0

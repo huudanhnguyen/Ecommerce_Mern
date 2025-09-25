@@ -191,7 +191,7 @@ export default function ProductList() {
   if (loading) return <p className="text-center">Loading products...</p>;
 
   return (
-    <div className="w-main p-6 max-w-7xl mx-auto">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <Breadcrumb />
 
       {/* Filter bar */}
@@ -199,12 +199,14 @@ export default function ProductList() {
 
       {/* Tags */}
       {Object.keys(filters).length > 0 && (
-        <div className="flex flex-wrap items-center mt-4 p-2 bg-gray-50 rounded-md shadow-sm">
-          <span className="font-semibold text-gray-700 mr-2">Searching:</span>
-          {renderFilterTags()}
+        <div className="flex flex-wrap items-center mt-4 p-3 sm:p-4 bg-gray-50 rounded-lg shadow-sm">
+          <span className="font-semibold text-gray-700 mr-2 text-sm sm:text-base">Searching:</span>
+          <div className="flex flex-wrap gap-2">
+            {renderFilterTags()}
+          </div>
           <button
             onClick={() => handleFilter({})}
-            className="ml-auto px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300"
+            className="ml-auto px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 transition-colors"
           >
             Clear All
           </button>
@@ -212,7 +214,7 @@ export default function ProductList() {
       )}
 
       {/* Product list */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 mt-6">
         {products.length > 0 ? (
           products.map((item) => (
             <ProductCardFormat
@@ -222,24 +224,26 @@ export default function ProductList() {
             />
           ))
         ) : (
-          <p className="col-span-full text-center text-gray-500">
-            No products found
-          </p>
+          <div className="col-span-full text-center py-12">
+            <p className="text-gray-500 text-lg">No products found</p>
+            <p className="text-gray-400 text-sm mt-2">Try adjusting your filters</p>
+          </div>
         )}
       </div>
 
       {/* Pagination */}
-      <div className="flex justify-center mt-6 gap-2">
+      <div className="flex justify-center mt-8 gap-1 sm:gap-2">
         <button
           disabled={page === 1}
           onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-          className={`px-3 py-2 border rounded-md ${
+          className={`px-3 py-2 text-sm sm:text-base border rounded-md transition-colors ${
             page === 1
               ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-              : "hover:bg-gray-200"
+              : "hover:bg-gray-200 hover:text-gray-700"
           }`}
         >
-          Prev
+          <span className="hidden sm:inline">Previous</span>
+          <span className="sm:hidden">Prev</span>
         </button>
 
         {Array.from({ length: totalPages }, (_, i) => i + 1)
@@ -256,8 +260,8 @@ export default function ProductList() {
               <button
                 key={p}
                 onClick={() => setPage(p)}
-                className={`px-3 py-2 border rounded-md ${
-                  page === p ? "bg-red-500 text-white" : "hover:bg-gray-200"
+                className={`px-3 py-2 text-sm sm:text-base border rounded-md transition-colors ${
+                  page === p ? "bg-red-500 text-white" : "hover:bg-gray-200 hover:text-gray-700"
                 }`}
               >
                 {p}
@@ -268,13 +272,14 @@ export default function ProductList() {
         <button
           disabled={page === totalPages}
           onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-          className={`px-3 py-2 border rounded-md ${
+          className={`px-3 py-2 text-sm sm:text-base border rounded-md transition-colors ${
             page === totalPages
               ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-              : "hover:bg-gray-200"
+              : "hover:bg-gray-200 hover:text-gray-700"
           }`}
         >
-          Next
+          <span className="hidden sm:inline">Next</span>
+          <span className="sm:hidden">Next</span>
         </button>
       </div>
     </div>

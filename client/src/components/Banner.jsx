@@ -24,7 +24,7 @@ const Banner = () => {
     };
 
     return (
-        <div className='w-full relative custom-banner-slick'>
+        <div className='w-full relative custom-banner-slick rounded-lg overflow-hidden shadow-lg'>
             {/* 4. Sử dụng component Slider */}
             <Slider {...settings}>
                 {/* 5. Map qua mảng ảnh để render từng slide */}
@@ -33,7 +33,7 @@ const Banner = () => {
                         <img 
                             src={imageUrl} 
                             alt={`banner-${index}`} 
-                            className='w-full h-[395px]' // Giữ lại class để đảm bảo kích thước
+                            className='w-full h-[250px] sm:h-[350px] lg:h-[395px] object-cover' // Responsive height
                         />
                     </div>
                 ))}

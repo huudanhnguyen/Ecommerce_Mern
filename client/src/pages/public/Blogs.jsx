@@ -22,43 +22,43 @@ const BlogList = () => {
   }, [currentPage]);
 
   return (
-    <div className="w-main max-w-6xl mx-auto px-4 py-10">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
       <Breadcrumb />
 
       {/* Blog Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
         {blogs.map((blog) => {
           const imageUrl = blog.images?.[0]?.url || "/no-image.png"; // fallback nếu không có ảnh
           const imageAlt = blog.images?.[0]?.alt || blog.title;
 
           return (
-            <div key={blog._id} className="group">
+            <div key={blog._id} className="group bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300">
               {/* Image */}
-              <div className="overflow-hidden rounded-lg shadow-sm">
+              <div className="overflow-hidden rounded-t-lg">
                 <img
                   src={imageUrl}
                   alt={imageAlt}
-                  className="w-full h-52 object-cover group-hover:scale-105 transition-transform duration-300"
+                  className="w-full h-48 sm:h-52 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
               </div>
 
               {/* Info */}
-              <div className="mt-4">
-                <h3 className="text-lg font-bold uppercase group-hover:text-red-500 transition">
+              <div className="p-4 sm:p-6">
+                <h3 className="text-lg sm:text-xl font-bold uppercase group-hover:text-red-500 transition-colors line-clamp-2">
                   {blog.title}
                 </h3>
-                <p className="text-gray-400 text-sm mt-1">
+                <p className="text-gray-400 text-xs sm:text-sm mt-2">
                   By {blog.author || "Admin"} •{" "}
                   {blog.createdAt
                     ? new Date(blog.createdAt).toLocaleDateString()
                     : "N/A"}
                 </p>
-                <p className="text-gray-600 text-sm mt-2 line-clamp-2">
+                <p className="text-gray-600 text-sm mt-3 line-clamp-3">
                   {blog.description}
                 </p>
                 <a
                   href={`/blog/${blog._id}`}
-                  className="text-red-500 text-sm font-semibold mt-2 inline-block hover:underline"
+                  className="text-red-500 text-sm font-semibold mt-3 inline-block hover:underline transition-colors"
                 >
                   Read More →
                 </a>
@@ -69,11 +69,13 @@ const BlogList = () => {
       </div>
 
       {/* Pagination */}
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-      />
+      <div className="mt-8 sm:mt-12">
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      </div>
     </div>
   );
 };

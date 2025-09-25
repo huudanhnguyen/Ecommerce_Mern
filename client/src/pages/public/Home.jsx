@@ -15,30 +15,46 @@ import {
 const Home = () => {
   return (
     <>
-      <div className="w-main flex gap-5 relative">
-        <div className="w-[20%] flex flex-col">
-          <Sidebar />
-          <DealDaily />
-        </div>
-        <div className="w-[80%] flex flex-col gap-5">
-          <Banner />
-          <BestSeller />
-          <AdBanners />
+      {/* Main Content - Responsive Layout */}
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 relative">
+          {/* Sidebar - Hidden on mobile, visible on desktop */}
+          <div className="hidden lg:block w-full lg:w-[20%] flex flex-col gap-4">
+            <Sidebar />
+            <DealDaily />
+          </div>
+          
+          {/* Main Content */}
+          <div className="w-full lg:w-[80%] flex flex-col gap-4 lg:gap-6">
+            <Banner />
+            <BestSeller />
+            <AdBanners />
+          </div>
         </div>
       </div>
-      <div className="w-main mt-5">
+
+      {/* Featured Products */}
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 lg:mt-8">
         <FeaturedProducts />
       </div>
-      <div className="w-main mt-5">
+
+      {/* Big Ad Banners */}
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 lg:mt-8">
         <BigAdBanners />
       </div>
-      <div className="w-main mt-5">
+
+      {/* New Arrivals */}
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 lg:mt-8">
         <NewArrivals />
       </div>
-      <div className="w-main mt-5">
+
+      {/* Hot Collections */}
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 lg:mt-8">
         <HotCollections />
       </div>
-      {/* <div className="w-main mt-5">
+
+      {/* Blog Post - Optional */}
+      {/* <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 lg:mt-8">
         <BlogPost />
       </div> */}
     </>

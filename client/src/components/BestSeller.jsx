@@ -16,6 +16,29 @@ const settings = {
   slidesToScroll: 1,
   autoplay: true,
   autoplaySpeed: 3000,
+  responsive: [
+    {
+      breakpoint: 1024,
+      settings: {
+        slidesToShow: 3,
+        slidesToScroll: 1,
+      }
+    },
+    {
+      breakpoint: 768,
+      settings: {
+        slidesToShow: 2,
+        slidesToScroll: 1,
+      }
+    },
+    {
+      breakpoint: 480,
+      settings: {
+        slidesToShow: 1,
+        slidesToScroll: 1,
+      }
+    }
+  ]
 };
 
 const BestSeller = () => {
@@ -60,12 +83,12 @@ const BestSeller = () => {
   return (
     <div className="w-full relative custom-slick">
       {/* --- Phần Tabs --- */}
-      <div className="flex text-[20px] gap-8 pb-4 border-b-2 border-main">
+      <div className="flex text-base sm:text-lg lg:text-xl gap-4 sm:gap-6 lg:gap-8 pb-3 sm:pb-4 border-b-2 border-main">
         {tabs.map((tab) => (
           <div
             key={tab.id}
-            className={`cursor-pointer font-semibold uppercase ${
-              activeTab === tab.id ? "text-main" : "text-gray-400"
+            className={`cursor-pointer font-semibold uppercase transition-colors duration-200 ${
+              activeTab === tab.id ? "text-main" : "text-gray-400 hover:text-gray-600"
             }`}
             onClick={() => setActiveTab(tab.id)}
           >
@@ -73,34 +96,35 @@ const BestSeller = () => {
           </div>
         ))}
       </div>
-      <div className="mt-4">
+      <div className="mt-4 sm:mt-6">
         <Slider {...settings}>
           {activeTab === 1 &&
             bestseller?.map((product) => (
-              // Truyền thêm prop label="TRENDING"
-              <Product
-                key={product._id}
-                productData={product}
-                label="TRENDING"
-                onQuickView={handleQuickView}
-              />
+              <div key={product._id} className="px-2">
+                <Product
+                  productData={product}
+                  label="TRENDING"
+                  onQuickView={handleQuickView}
+                />
+              </div>
             ))}
 
           {activeTab === 2 &&
             newProduct?.map((product) => (
-              // Truyền thêm prop label="NEW"
-              <Product key={product._id}
-              productData={product}
-              label="NEW"
-              onQuickView={handleQuickView}
-               />
+              <div key={product._id} className="px-2">
+                <Product 
+                  productData={product}
+                  label="NEW"
+                  onQuickView={handleQuickView}
+                />
+              </div>
             ))}
         </Slider>
       </div>
       {/* 5. Render Modal một cách có điều kiện */}
-            {showModal && modalData && (
-                <QuickViewModal product={modalData} onClose={handleCloseModal} />
-            )}
+      {showModal && modalData && (
+        <QuickViewModal product={modalData} onClose={handleCloseModal} />
+      )}
     </div>
   );
 };

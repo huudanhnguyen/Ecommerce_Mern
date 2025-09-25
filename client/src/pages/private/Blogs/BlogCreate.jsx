@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import BlogForm from "../../../components/Admin/BlogForm";
 import { createBlog } from "../../../apis/blog";
-import { buildFormData } from "../../../utils/buildFormData";
+import { buildBlogFormData } from "../../../utils/buildBlogFormData";
 
 const BlogCreate = () => {
   const [loading, setLoading] = useState(false);
@@ -9,7 +9,7 @@ const BlogCreate = () => {
   const handleSubmit = async (values) => {
     try {
       setLoading(true);
-      const formData = buildFormData(values);
+      const formData = buildBlogFormData(values);
 
       const res = await createBlog(formData, {
         headers: { "Content-Type": "multipart/form-data" },

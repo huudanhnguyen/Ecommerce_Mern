@@ -34,15 +34,17 @@ const TopHeader = () => {
 
   return (
     <div className="w-full bg-main text-white">
-      <div className="w-main mx-auto flex items-center justify-between py-2 text-sm">
-        {/* --- Phần trái: Thông tin khuyến mãi --- */}
-        <div className="flex items-center gap-4">
-          <span>ORDER ONLINE OR CALL US (+1800) 000 8808</span>
-          <span className="border-l pl-4">VND</span>
-        </div>
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-2 text-xs sm:text-sm gap-2 sm:gap-4">
+          {/* --- Phần trái: Thông tin khuyến mãi --- */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-center sm:text-left">
+            <span className="hidden sm:inline">ORDER ONLINE OR CALL US (+1800) 000 8808</span>
+            <span className="sm:hidden">ORDER ONLINE OR CALL US</span>
+            <span className="border-l pl-2 sm:pl-4">VND</span>
+          </div>
 
-        {/* --- Phần phải --- */}
-        <div className="flex items-center gap-6">
+          {/* --- Phần phải --- */}
+          <div className="flex items-center justify-center sm:justify-end gap-4 sm:gap-6">
           {isLoggedIn && currentUser ? (
             // 3. Gắn ref vào div cha và sửa lại sự kiện
             <div className="relative" ref={dropdownRef}>
@@ -95,19 +97,20 @@ const TopHeader = () => {
             </Link>
           )}
 
-          <div className="flex items-center gap-4">
-            <a href="#" className="hover:text-gray-300">
-              <FaFacebookF />
-            </a>
-            <a href="#" className="hover:text-gray-300">
-              <FaTwitter />
-            </a>
-            <a href="#" className="hover:text-gray-300">
-              <FaGoogle />
-            </a>
-            <a href="#" className="hover:text-gray-300">
-              <FaPinterestP />
-            </a>
+            <div className="flex items-center gap-3 sm:gap-4">
+              <a href="#" className="hover:text-gray-300 transition-colors">
+                <FaFacebookF size={14} />
+              </a>
+              <a href="#" className="hover:text-gray-300 transition-colors">
+                <FaTwitter size={14} />
+              </a>
+              <a href="#" className="hover:text-gray-300 transition-colors">
+                <FaGoogle size={14} />
+              </a>
+              <a href="#" className="hover:text-gray-300 transition-colors">
+                <FaPinterestP size={14} />
+              </a>
+            </div>
           </div>
         </div>
       </div>

@@ -39,6 +39,12 @@ import ProductList from "./pages/private/Products/ProductList";
 import BlogsAdmin from "./pages/private/Blogs/BlogList";
 import BlogCreate from "./pages/private/Blogs/BlogCreate";
 import BlogEdit from "./pages/private/Blogs/BlogEdit";
+import BlogCategoryList from "./pages/private/BlogCategories/BlogCategoryList";
+import BlogCategoryCreate from "./pages/private/BlogCategories/BlogCategoryCreate";
+import BlogCategoryEdit from "./pages/private/BlogCategories/BlogCategoryEdit";
+import ProductCategoryList from "./pages/private/ProductCategories/ProductCategoryList";
+import ProductCategoryCreate from "./pages/private/ProductCategories/ProductCategoryCreate";
+import ProductCategoryEdit from "./pages/private/ProductCategories/ProductCategoryEdit";
 
 // import route bảo vệ admin
 import AdminRoute from "./components/Admin/AdminRoute";
@@ -95,6 +101,12 @@ function App() {
           <Route path="/admin/blogs" element={<BlogsAdmin />} />
           <Route path="/admin/blogs/create" element={<BlogCreate />} />
           <Route path="/admin/blogs/edit/:id" element={<BlogEdit />} />
+          <Route path="/admin/blog-categories" element={<BlogCategoryList />} />
+          <Route path="/admin/blog-categories/create" element={<BlogCategoryCreate />} />
+          <Route path="/admin/blog-categories/edit/:id" element={<BlogCategoryEdit />} />
+          <Route path="/admin/product-categories" element={<ProductCategoryList />} />
+          <Route path="/admin/product-categories/create" element={<ProductCategoryCreate />} />
+          <Route path="/admin/product-categories/edit/:id" element={<ProductCategoryEdit />} />
         </Route>
       </Route>
     </Routes>

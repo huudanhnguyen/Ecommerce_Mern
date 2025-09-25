@@ -13,6 +13,7 @@ import {
   Package,
   ChevronLeft,
   ChevronRight,
+  Layers,
 } from "lucide-react";
 
 const ProductList = () => {
@@ -133,6 +134,14 @@ const ProductList = () => {
             <Plus size={16} /> 
             <span className="hidden sm:inline">Add Product</span>
             <span className="sm:hidden">Add</span>
+          </Link>
+          <Link
+            to="/admin/product-categories"
+            className="flex items-center gap-2 px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-sm flex-1 min-w-0 justify-center"
+          >
+            <Layers size={16} /> 
+            <span className="hidden sm:inline">Categories</span>
+            <span className="sm:hidden">Cat</span>
           </Link>
           <button className="flex items-center gap-2 px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-sm flex-1 min-w-0 justify-center">
             <Upload size={16} /> 

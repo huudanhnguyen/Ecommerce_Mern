@@ -85,14 +85,14 @@ export default function SearchBar() {
   };
 
   return (
-    <div className="relative w-full max-w-sm">
+    <div className="relative w-full max-w-xs sm:max-w-sm">
       <form onSubmit={handleSearchSubmit}>
         <input
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Search..."
-          className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring focus:ring-red-400"
+          className="w-full border border-gray-300 rounded-md px-3 sm:px-4 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent"
         />
       </form>
 

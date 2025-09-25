@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { logout } from "../../store/userSlice";
 import {
@@ -14,26 +14,82 @@ import {
   ChevronLeft,
   ChevronRight,
   FileText,
+  FolderOpen,
+  Layers,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 
 const AdminLayout = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const [collapsed, setCollapsed] = useState(false); // Thu nhỏ sidebar
   const [mobileOpen, setMobileOpen] = useState(false); // Mobile menu
+  const [expandedGroups, setExpandedGroups] = useState({
+    products: true,
+    content: true,
+    system: false,
+  });
 
   const handleLogout = () => {
     dispatch(logout());
     navigate("/login");
   };
 
-  const navItems = [
-    { to: "/admin/dashboard", label: "Dashboard", icon: <LayoutDashboard size={18} /> },
-    { to: "/admin/users", label: "Users", icon: <Users size={18} /> },
-    { to: "/admin/products", label: "Products", icon: <Package size={18} /> },
-    { to: "/admin/blogs", label: "Blogs", icon: <FileText size={18} /> },
-    { to: "/admin/settings", label: "Settings", icon: <Settings size={18} /> },
-    { to: "/admin/analytics", label: "Analytics", icon: <BarChart3 size={18} /> },
+  // Toggle group expansion
+  const toggleGroup = (groupName) => {
+    setExpandedGroups(prev => ({
+      ...prev,
+      [groupName]: !prev[groupName]
+    }));
+  };
+
+  // Menu structure with groups
+  const menuGroups = [
+    {
+      id: "dashboard",
+      title: "Tổng Quan",
+      icon: <LayoutDashboard size={18} />,
+      items: [
+        { to: "/admin/dashboard", label: "Dashboard", icon: <LayoutDashboard size={18} /> },
+        { to: "/admin/analytics", label: "Thống Kê", icon: <BarChart3 size={18} /> },
+      ]
+    },
+    {
+      id: "products",
+      title: "Sản Phẩm",
+      icon: <Package size={18} />,
+      items: [
+        { to: "/admin/products", label: "Danh Sách Sản Phẩm", icon: <Package size={18} /> },
+        { to: "/admin/product-categories", label: "Danh Mục Sản Phẩm", icon: <Layers size={18} /> },
+      ]
+    },
+    {
+      id: "content",
+      title: "Nội Dung",
+      icon: <FileText size={18} />,
+      items: [
+        { to: "/admin/blogs", label: "Bài Viết Blog", icon: <FileText size={18} /> },
+        { to: "/admin/blog-categories", label: "Danh Mục Blog", icon: <FolderOpen size={18} /> },
+      ]
+    },
+    {
+      id: "users",
+      title: "Người Dùng",
+      icon: <Users size={18} />,
+      items: [
+        { to: "/admin/users", label: "Quản Lý Người Dùng", icon: <Users size={18} /> },
+      ]
+    },
+    {
+      id: "system",
+      title: "Hệ Thống",
+      icon: <Settings size={18} />,
+      items: [
+        { to: "/admin/settings", label: "Cài Đặt", icon: <Settings size={18} /> },
+      ]
+    }
   ];
 
   return (
@@ -69,22 +125,86 @@ const AdminLayout = () => {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-2 py-6 space-y-1">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isActive
-                    ? "bg-main text-white shadow"
-                    : "text-gray-600 hover:bg-gray-100 hover:text-main"
-                }`
-              }
-            >
-              {item.icon}
-              {!collapsed && <span>{item.label}</span>}
-            </NavLink>
+        <nav className="flex-1 px-2 py-6 space-y-4">
+          {menuGroups.map((group, index) => (
+            <div key={group.id} className="space-y-1">
+              {/* Divider before system group */}
+              {group.id === "system" && !collapsed && (
+                <div className="border-t border-gray-200 pt-4"></div>
+              )}
+              {/* Group Header */}
+              {!collapsed && (
+                <div
+                  className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm font-semibold transition-colors cursor-pointer ${
+                    group.items.some(item => 
+                      location.pathname === item.to
+                    ) 
+                      ? "bg-main/10 text-main" 
+                      : "text-gray-700 hover:bg-gray-100 hover:text-main"
+                  }`}
+                  onClick={() => toggleGroup(group.id)}
+                >
+                  <div className="flex items-center gap-3">
+                    {group.icon}
+                    <span>{group.title}</span>
+                  </div>
+                  {group.items.length > 1 && (
+                    expandedGroups[group.id] ? 
+                      <ChevronUp size={16} /> : 
+                      <ChevronDown size={16} />
+                  )}
+                </div>
+              )}
+
+              {/* Group Items */}
+              {(!collapsed && (group.items.length === 1 || expandedGroups[group.id])) && (
+                <div className="ml-6 space-y-1">
+                  {group.items.map((item) => (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      className={({ isActive }) =>
+                        `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          isActive
+                            ? "bg-main text-white shadow"
+                            : "text-gray-600 hover:bg-gray-100 hover:text-main"
+                        }`
+                      }
+                    >
+                      {item.icon}
+                      <span>{item.label}</span>
+                    </NavLink>
+                  ))}
+                </div>
+              )}
+
+              {/* Collapsed mode - show all items as single icons */}
+              {collapsed && (
+                <div className="space-y-1">
+                  {group.items.map((item) => (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      className={({ isActive }) =>
+                        `flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium transition-colors group relative ${
+                          isActive
+                            ? "bg-main text-white shadow"
+                            : "text-gray-600 hover:bg-gray-100 hover:text-main"
+                        }`}
+                      title={item.label}
+                    >
+                      <>
+                        {item.icon}
+                        {/* Tooltip for collapsed mode */}
+                        <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                          {item.label}
+                        </div>
+                      </>
+                    </NavLink>
+                  ))}
+                </div>
+              )}
+            </div>
           ))}
         </nav>
 
