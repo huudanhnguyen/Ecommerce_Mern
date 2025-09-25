@@ -16,6 +16,7 @@ import {
   FileText,
   FolderOpen,
   Layers,
+  Image,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
@@ -72,6 +73,7 @@ const AdminLayout = () => {
       items: [
         { to: "/admin/blogs", label: "Bài Viết Blog", icon: <FileText size={18} /> },
         { to: "/admin/blog-categories", label: "Danh Mục Blog", icon: <FolderOpen size={18} /> },
+        { to: "/admin/sliders", label: "Quản Lý Slider", icon: <Image size={18} /> },
       ]
     },
     {

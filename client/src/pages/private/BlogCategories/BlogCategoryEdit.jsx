@@ -77,3 +77,5 @@ const BlogCategoryEdit = () => {
 };
 
 export default BlogCategoryEdit;
+
+

@@ -31,5 +31,3 @@ export const deleteProductCategory = (id) => axios({
   url: `/product-categories/${id}`,
   method: 'delete'
 });
-
-

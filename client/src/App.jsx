@@ -45,6 +45,9 @@ import BlogCategoryEdit from "./pages/private/BlogCategories/BlogCategoryEdit";
 import ProductCategoryList from "./pages/private/ProductCategories/ProductCategoryList";
 import ProductCategoryCreate from "./pages/private/ProductCategories/ProductCategoryCreate";
 import ProductCategoryEdit from "./pages/private/ProductCategories/ProductCategoryEdit";
+import SliderList from "./pages/private/Sliders/SliderList";
+import SliderCreate from "./pages/private/Sliders/SliderCreate";
+import SliderEdit from "./pages/private/Sliders/SliderEdit";
 
 // import route bảo vệ admin
 import AdminRoute from "./components/Admin/AdminRoute";
@@ -107,6 +110,9 @@ function App() {
           <Route path="/admin/product-categories" element={<ProductCategoryList />} />
           <Route path="/admin/product-categories/create" element={<ProductCategoryCreate />} />
           <Route path="/admin/product-categories/edit/:id" element={<ProductCategoryEdit />} />
+          <Route path="/admin/sliders" element={<SliderList />} />
+          <Route path="/admin/sliders/create" element={<SliderCreate />} />
+          <Route path="/admin/sliders/edit/:id" element={<SliderEdit />} />
         </Route>
       </Route>
     </Routes>
