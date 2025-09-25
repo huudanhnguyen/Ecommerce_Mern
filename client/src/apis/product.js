@@ -16,6 +16,11 @@ export const getProductById = (pid) =>
     url: `/product/${pid}`,
     method: 'get',
   });
+ export const deleteProduct = (id) =>
+  axios({
+    url: `/product/${id}`,
+    method: 'delete',
+  });
 
 // ================= RATING =================
 

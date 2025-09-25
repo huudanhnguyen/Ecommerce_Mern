@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getAllProducts } from "../../../apis/product";
-import { getApiCategories } from "../../../apis/categoryProduct"; // 📌 Import API category
+import { getAllProducts, deleteProduct } from "../../../apis/product"; // 📌 thêm deleteProduct
+import { getApiCategories } from "../../../apis/categoryProduct"; 
 import { formatPrice } from "../../../utils/helpers.jsx";
 import {
   Search,
@@ -17,24 +17,26 @@ import {
 
 const ProductList = () => {
   const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]); // 📌 state lưu category
+  const [categories, setCategories] = useState([]);
   const [search, setSearch] = useState("");
   const [filterCategory, setFilterCategory] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedProducts, setSelectedProducts] = useState([]); // 📌 lưu sản phẩm được chọn
   const itemsPerPage = 10;
 
   // 📌 Fetch products
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const { data } = await getAllProducts({ page: 1, limit: 100 });
-        if (Array.isArray(data.products)) {
-          setProducts(data.products);
-        }
-      } catch (error) {
-        console.error("❌ Error fetching products:", error);
+  const fetchProducts = async () => {
+    try {
+      const { data } = await getAllProducts({ page: 1, limit: 100 });
+      if (Array.isArray(data.products)) {
+        setProducts(data.products);
       }
-    };
+    } catch (error) {
+      console.error("❌ Error fetching products:", error);
+    }
+  };
+
+  useEffect(() => {
     fetchProducts();
   }, []);
 
@@ -68,6 +70,53 @@ const ProductList = () => {
     currentPage * itemsPerPage
   );
 
+  // 📌 Toggle chọn sản phẩm
+  const toggleSelect = (id) => {
+    setSelectedProducts((prev) =>
+      prev.includes(id) ? prev.filter((pid) => pid !== id) : [...prev, id]
+    );
+  };
+
+  // 📌 Chọn tất cả
+  const toggleSelectAll = () => {
+    const idsOnPage = paginatedProducts.map((p) => p._id);
+    if (idsOnPage.every((id) => selectedProducts.includes(id))) {
+      setSelectedProducts((prev) => prev.filter((id) => !idsOnPage.includes(id)));
+    } else {
+      setSelectedProducts((prev) => [...new Set([...prev, ...idsOnPage])]);
+    }
+  };
+
+  // 📌 Xóa 1 sản phẩm
+  const handleDelete = async (id) => {
+    if (window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này không?")) {
+      try {
+        await deleteProduct(id);
+        setProducts((prev) => prev.filter((p) => p._id !== id));
+        setSelectedProducts((prev) => prev.filter((pid) => pid !== id));
+      } catch (error) {
+        console.error("❌ Error deleting product:", error);
+      }
+    }
+  };
+
+  // 📌 Xóa nhiều sản phẩm
+  const handleDeleteSelected = async () => {
+    if (selectedProducts.length === 0) {
+      alert("Vui lòng chọn ít nhất 1 sản phẩm để xóa.");
+      return;
+    }
+    if (window.confirm("Bạn có chắc chắn muốn xóa các sản phẩm đã chọn không?")) {
+      try {
+        await Promise.all(selectedProducts.map((id) => deleteProduct(id)));
+        setProducts((prev) => prev.filter((p) => !selectedProducts.includes(p._id)));
+        setSelectedProducts([]);
+      } catch (error) {
+        console.error("❌ Error deleting selected products:", error);
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -88,6 +137,12 @@ const ProductList = () => {
           </button>
           <button className="flex items-center gap-2 px-3 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition text-sm">
             <Download size={16} /> Export
+          </button>
+          <button
+            onClick={handleDeleteSelected}
+            className="flex items-center gap-2 px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm"
+          >
+            <Trash2 size={16} /> Delete Selected
           </button>
         </div>
       </div>
@@ -126,6 +181,16 @@ const ProductList = () => {
         <table className="w-full border-collapse">
           <thead>
             <tr className="bg-gray-100 text-gray-600 text-sm">
+              <th className="p-3">
+                <input
+                  type="checkbox"
+                  onChange={toggleSelectAll}
+                  checked={
+                    paginatedProducts.length > 0 &&
+                    paginatedProducts.every((p) => selectedProducts.includes(p._id))
+                  }
+                />
+              </th>
               <th className="p-3 text-left">Thumbnail</th>
               <th className="p-3 text-left">Product Name</th>
               <th className="p-3 text-left">Category</th>
@@ -137,6 +202,13 @@ const ProductList = () => {
           <tbody>
             {paginatedProducts.map((p) => (
               <tr key={p._id} className="border-b hover:bg-gray-50 text-sm">
+                <td className="p-3 text-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedProducts.includes(p._id)}
+                    onChange={() => toggleSelect(p._id)}
+                  />
+                </td>
                 <td className="p-3">
                   <img
                     src={p.thumb || "/no-image.png"}
@@ -157,7 +229,10 @@ const ProductList = () => {
                   >
                     <Edit size={16} />
                   </Link>
-                  <button className="p-2 text-red-600 hover:bg-red-50 rounded">
+                  <button
+                    onClick={() => handleDelete(p._id)}
+                    className="p-2 text-red-600 hover:bg-red-50 rounded"
+                  >
                     <Trash2 size={16} />
                   </button>
                 </td>
@@ -165,45 +240,6 @@ const ProductList = () => {
             ))}
           </tbody>
         </table>
-      </div>
-
-      {/* Card view - Mobile */}
-      <div className="block md:hidden space-y-4">
-        {paginatedProducts.map((p) => (
-          <div
-            key={p._id}
-            className="bg-white rounded-lg shadow p-4 flex flex-col space-y-2"
-          >
-            <div className="flex items-center gap-3">
-              <img
-                src={p.thumb || "/no-image.png"}
-                alt={p.title}
-                className="w-16 h-16 object-cover rounded"
-              />
-              <div className="flex-1">
-                <h3 className="font-semibold text-gray-800">{p.title}</h3>
-                <p className="text-sm text-gray-500">
-                  Category: {p.category?.title || "—"}
-                </p>
-                <p className="text-sm text-gray-500">Stock: {p.quantity}</p>
-              </div>
-              <span className="text-red-600 font-semibold">
-                {formatPrice(p.price)}
-              </span>
-            </div>
-            <div className="flex gap-2 mt-2">
-              <Link
-                to={`/admin/products/edit/${p._id}`}
-                className="flex-1 py-1 bg-blue-50 text-blue-600 rounded text-sm text-center"
-              >
-                <Edit size={14} className="inline mr-1" /> Edit
-              </Link>
-              <button className="flex-1 py-1 bg-red-50 text-red-600 rounded text-sm">
-                <Trash2 size={14} className="inline mr-1" /> Delete
-              </button>
-            </div>
-          </div>
-        ))}
       </div>
 
       {/* Pagination */}
