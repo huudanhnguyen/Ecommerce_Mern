@@ -114,7 +114,7 @@ const DealDaily = () => {
   if (!dealProduct) {
     return (
       <div className="w-full border p-3 sm:p-4 rounded-md bg-white shadow-sm">
-        <div className="flex items-center justify-center h-32 sm:h-40">
+        <div className="flex items-center justify-center h-48 sm:h-56">
           <div className="text-gray-500 text-sm">Loading Daily Deal...</div>
         </div>
       </div>
@@ -129,7 +129,7 @@ const DealDaily = () => {
   };
 
   return (
-    <div className="w-full border p-3 sm:p-4 rounded-md h-full flex flex-col justify-between bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
+    <div className="w-full border p-3 sm:p-4 rounded-md bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
       <Link
         to={`/${path.DETAIL_PRODUCT}/${dealProduct._id}/${dealProduct.slug}`}
       >
@@ -143,7 +143,7 @@ const DealDaily = () => {
           <img
             src={dealProduct.thumb}
             alt={dealProduct.title}
-            className="w-full h-32 sm:h-40 lg:h-48 object-contain mb-3 sm:mb-4"
+            className="w-full h-24 sm:h-32 lg:h-36 object-contain mb-3 sm:mb-4"
           />
           <h4 className="font-semibold truncate mb-2 text-sm sm:text-base text-gray-700">
             {dealProduct.title.toUpperCase()}
@@ -156,18 +156,18 @@ const DealDaily = () => {
           </p>
         </div>
       </Link>
-      <div>
-        <div className="grid grid-cols-3 gap-1 sm:gap-2 text-center mb-3 sm:mb-4">
-          <div className="bg-gray-100 p-1.5 sm:p-2 rounded-md">
-            <div className="text-lg sm:text-xl font-bold text-red-600">{timeLeft.hours}</div>
+      <div className="mt-4">
+        <div className="grid grid-cols-3 gap-1 sm:gap-2 text-center">
+          <div className="bg-gray-100 p-1 sm:p-1.5 rounded-md">
+            <div className="text-sm sm:text-base font-bold text-red-600">{timeLeft.hours}</div>
             <div className="text-xs text-gray-500">Hours</div>
           </div>
-          <div className="bg-gray-100 p-1.5 sm:p-2 rounded-md">
-            <div className="text-lg sm:text-xl font-bold text-red-600">{timeLeft.minutes}</div>
+          <div className="bg-gray-100 p-1 sm:p-1.5 rounded-md">
+            <div className="text-sm sm:text-base font-bold text-red-600">{timeLeft.minutes}</div>
             <div className="text-xs text-gray-500">Minutes</div>
           </div>
-          <div className="bg-gray-100 p-1.5 sm:p-2 rounded-md">
-            <div className="text-lg sm:text-xl font-bold text-red-600">{timeLeft.seconds}</div>
+          <div className="bg-gray-100 p-1 sm:p-1.5 rounded-md">
+            <div className="text-sm sm:text-base font-bold text-red-600">{timeLeft.seconds}</div>
             <div className="text-xs text-gray-500">Seconds</div>
           </div>
         </div>
