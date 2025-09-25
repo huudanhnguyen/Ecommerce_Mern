@@ -122,88 +122,53 @@ const deleteBlog = asyncHandler(async (req, res) => {
 });
 // likeBlog and dislikeBlog
 const likeBlog = asyncHandler(async (req, res) => {
-    const { bid } = req.body;
-    const { _id } = req.user;
-    if (!bid) {
-        res.status(400);
-        throw new Error('Blog ID is required');
-    }
-    const blog = await Blog.findById(bid);
+    const { id } = req.params; // lấy id từ params
+    const loginUserId = req.user._id;
+
+    const blog = await Blog.findById(id);
     if (!blog) {
         res.status(404);
-        throw new Error(`Blog with ID ${bid} not found`);
+        throw new Error("Blog not found");
     }
-    const alreadyDisliked = blog.dislikes.find(userId => userId.toString() === _id.toString());
-    if (alreadyDisliked) {
-        // Nếu user đang dislike, thì xóa dislike và thêm like
-        const response = await Blog.findByIdAndUpdate(bid, {
-            $pull: { dislikes: _id }, // Xóa user khỏi mảng dislikes
-            $push: { likes: _id }     // Thêm user vào mảng likes
-        }, { new: true });
-        return res.json({ message: 'Dislike removed and blog liked', blog: response });
-    }
-    const isLiked = blog.likes.find(userId => userId.toString() === _id.toString());
+
+    const isLiked = blog.likes.includes(loginUserId);
+    const isDisliked = blog.dislikes.includes(loginUserId);
+
     if (isLiked) {
-        const response = await Blog.findByIdAndUpdate(bid, {
-            $pull: { likes: _id } // Xóa user khỏi mảng likes
-        }, { new: true });
-        return res.json({ message: 'Like removed', blog: response });
+        blog.likes.pull(loginUserId);
     } else {
-        const response = await Blog.findByIdAndUpdate(bid, {
-            $push: { likes: _id } // Thêm user vào mảng likes
-        }, { new: true });
-        const blogObject = response.toObject();         // 1. Chuyển Mongoose document sang object thuần túy
-        const loginUserId = req.user._id.toString();
-        // 3. Tính toán và thêm các trường ảo
-        blogObject.isLiked = response.likes.some(userId => userId.toString() === loginUserId);
-        blogObject.isDisliked = response.dislikes.some(userId => userId.toString() === loginUserId);
-        return res.json(blogObject);
+        blog.likes.push(loginUserId);
+        if (isDisliked) blog.dislikes.pull(loginUserId);
     }
+
+    await blog.save();
+    res.json(blog);
 });
-// ... các hàm khác trong file controllers/blog.js
 
 const dislikeBlog = asyncHandler(async (req, res) => {
-    const { bid } = req.body;
-    const { _id } = req.user;
+    const { id } = req.params; // lấy id từ params
+    const loginUserId = req.user._id;
 
-    if (!bid) {
-        res.status(400);
-        throw new Error('Blog ID is required');
-    }
-
-    const blog = await Blog.findById(bid);
+    const blog = await Blog.findById(id);
     if (!blog) {
         res.status(404);
-        throw new Error(`Blog with ID ${bid} not found`);
+        throw new Error("Blog not found");
     }
 
-    // Kiểm tra xem user đã "like" bài viết này chưa
-    const isLiked = blog.likes.find(userId => userId.toString() === _id.toString());
-    if (isLiked) {
-        // Nếu đã like, thì xóa like và thêm dislike (chuyển trạng thái)
-        const response = await Blog.findByIdAndUpdate(bid, {
-            $pull: { likes: _id },      // Xóa user khỏi mảng likes
-            $push: { dislikes: _id }  // Thêm user vào mảng dislikes
-        }, { new: true });
-        return res.json({ message: 'Like removed and blog disliked', blog: response });
-    }
-    
-    // Nếu chưa like, thì kiểm tra xem đã dislike chưa
-    const alreadyDisliked = blog.dislikes.find(userId => userId.toString() === _id.toString());
-    if (alreadyDisliked) {
-        // Nếu đã dislike rồi, thì bỏ dislike
-        const response = await Blog.findByIdAndUpdate(bid, {
-            $pull: { dislikes: _id } // Xóa user khỏi mảng dislikes
-        }, { new: true });
-        return res.json({ message: 'Dislike removed', blog: response });
+    const isDisliked = blog.dislikes.includes(loginUserId);
+    const isLiked = blog.likes.includes(loginUserId);
+
+    if (isDisliked) {
+        blog.dislikes.pull(loginUserId);
     } else {
-        // Nếu chưa có hành động gì, thì thêm dislike
-        const response = await Blog.findByIdAndUpdate(bid, {
-            $push: { dislikes: _id } // Thêm user vào mảng dislikes
-        }, { new: true });
-        return res.json({ message: 'Blog disliked', blog: response });
+        blog.dislikes.push(loginUserId);
+        if (isLiked) blog.likes.pull(loginUserId);
     }
+
+    await blog.save();
+    res.json(blog);
 });
+
 const excludeFields = '-__v -password -refreshToken -role -createdAt -updatedAt'; // Chỉ lấy các trường likes và dislikes
 // File: controllers/blog.js
 

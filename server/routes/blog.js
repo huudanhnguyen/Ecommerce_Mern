@@ -13,8 +13,8 @@ router.post('/', [verifyToken, isAdmin], uploadCloud.array('images', 10), ctrls.
 router.get('/', ctrls.getBlogs);
 
 // Like / Dislike blog (phải login)
-router.put('/like', verifyToken, ctrls.likeBlog);
-router.put('/dislike', verifyToken, ctrls.dislikeBlog);
+router.put('/like/:id', verifyToken, ctrls.likeBlog);
+router.put('/dislike/:id', verifyToken, ctrls.dislikeBlog);
 
 // Lấy chi tiết blog (ai cũng xem được, login thì kèm trạng thái like/dislike)
 router.get('/:id', ctrls.getBlogById);
