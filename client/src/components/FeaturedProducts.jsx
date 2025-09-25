@@ -29,14 +29,13 @@ const FeaturedProducts = () => {
     return (
         <div className='w-full'>
             {/* --- Tiêu đề Section --- */}
-            <h3 className='text-xl font-semibold py-4 border-b-2 border-main'>
+            <h3 className='text-xl sm:text-2xl font-bold py-4 border-b-2 border-main text-gray-800'>
                 FEATURED PRODUCTS
             </h3>
             
-            {/* --- Lưới sản phẩm 3x3 --- */}
-            <div className='mt-4 grid grid-cols-1 md:grid-cols-3 gap-4'>
+            {/* --- Lưới sản phẩm responsive --- */}
+            <div className='mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6'>
                 {products?.map(product => (
-                    // 3. Sử dụng component ProductCard
                     <ProductCard key={product._id} productData={product} />
                 ))}
             </div>

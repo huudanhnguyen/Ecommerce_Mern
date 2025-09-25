@@ -46,50 +46,59 @@ categoriesData = categoriesData.filter((cat) => {
   }, []);
 
   return (
-    <div className="w-full p-6 bg-white">
-      <h3 className="text-2xl font-bold mb-4 border-b-2 border-red-500 pb-2">
+    <div className="w-full p-4 sm:p-6 bg-white">
+      <h3 className="text-xl sm:text-2xl font-bold mb-6 border-b-2 border-red-500 pb-2">
         HOT COLLECTIONS
       </h3>
 
       {loading ? (
-        <p className="text-gray-500">Loading data...</p>
+        <div className="flex justify-center items-center py-8">
+          <p className="text-gray-500">Loading data...</p>
+        </div>
       ) : categories.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {categories.map((cat, index) => (
             <div
               key={index}
-              className="flex items-center gap-4 p-6 border rounded-lg shadow-sm hover:shadow-md transition"
+              className="flex items-center gap-3 sm:gap-4 p-4 sm:p-6 border rounded-lg shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105"
             >
               {/* Icon / Image */}
               {cat.img && (
                 <img
                   src={cat.img}
                   alt={cat.cate}
-                  className="w-20 h-20 object-contain"
+                  className="w-16 h-16 sm:w-20 sm:h-20 object-contain flex-shrink-0"
                 />
               )}
 
               {/* Text content */}
-              <div>
-                <h4 className="text-lg font-bold uppercase mb-2">
+              <div className="flex-1 min-w-0">
+                <h4 className="text-base sm:text-lg font-bold uppercase mb-2 text-gray-800">
                   {cat.cate}
                 </h4>
-                <ul className="space-y-1 text-gray-600 text-sm">
+                <ul className="space-y-1 text-gray-600 text-xs sm:text-sm">
                   {cat.brand &&
                     Array.isArray(cat.brand) &&
-                    cat.brand.map((b, i) => (
+                    cat.brand.slice(0, 5).map((b, i) => (
                       <li key={i} className="flex items-center gap-1">
                         <span className="text-red-500">›</span>
-                        <span>{b}</span>
+                        <span className="truncate">{b}</span>
                       </li>
                     ))}
+                  {cat.brand && cat.brand.length > 5 && (
+                    <li className="text-gray-400 text-xs">
+                      +{cat.brand.length - 5} more...
+                    </li>
+                  )}
                 </ul>
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <p className="text-gray-500">No categories found.</p>
+        <div className="flex justify-center items-center py-8">
+          <p className="text-gray-500">No categories found.</p>
+        </div>
       )}
     </div>
   );
