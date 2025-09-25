@@ -1,349 +1,294 @@
-import React, { useState, useEffect } from "react";
-import { useFormik } from "formik";
-import * as Yup from "yup";
-import { useParams, useNavigate } from "react-router-dom";
+// src/components/ProductForm.jsx
+import React, { useEffect, useState, useRef } from "react";
+import { Formik, Form, Field, FieldArray } from "formik";
+import { getApiCategories } from "../../apis/categoryProduct";
 
-const ProductForm = ({ onSubmit }) => {
-  const { id } = useParams();
-  const navigate = useNavigate();
-
+const ProductForm = ({ onSubmit, initialData = null }) => {
   const [categories, setCategories] = useState([]);
-  const [thumbPreview, setThumbPreview] = useState("");
-  const [imagePreviews, setImagePreviews] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [previewThumb, setPreviewThumb] = useState("");
+  const [previewImages, setPreviewImages] = useState([]);
+  const createdObjectUrls = useRef([]);
 
   // fetch categories
   useEffect(() => {
-    fetch("/api/product-categories")
-      .then((res) => res.json())
-      .then((data) => setCategories(data));
+    (async () => {
+      try {
+        const res = await getApiCategories();
+        setCategories(res.data || []);
+      } catch (err) {
+        console.error("❌ Error loading categories:", err);
+      }
+    })();
   }, []);
 
-  // fetch product if edit
+  const flattenImageUrls = (imgs) => {
+    if (!imgs) return [];
+    if (!Array.isArray(imgs)) return [];
+    return Array.isArray(imgs[0]) ? imgs.flat() : imgs;
+  };
+
   useEffect(() => {
-    if (id) {
-      fetch(`/api/product/${id}`)
-        .then((res) => res.json())
-        .then((data) => {
-          console.log("🔄 Product edit data:", data);
-
-          formik.setValues({
-            title: data.title || "",
-            price: data.price || "",
-            slug: data.slug || "",
-            brand: data.brand || "",
-            description: data.description || [""],
-            infomations: data.infomations || {
-              DESCRIPTION: "",
-              WARRANTY: "",
-              DELIVERY: "",
-              PAYMENT: "",
-            },
-            category: data.category?._id || data.category || "",
-            variants: data.variants || [],
-            quantity: data.quantity || 0,
-            isActive: data.isActive ?? true,
-            thumb: data.thumb || "",
-            images: data.images || [],
-          });
-
-          setThumbPreview(data.thumb || "");
-          setImagePreviews(data.images || []);
-          setLoading(false);
-        });
-    } else {
-      setLoading(false);
+    if (initialData) {
+      setPreviewThumb(initialData.thumb || "");
+      setPreviewImages(flattenImageUrls(initialData.images));
     }
-  }, [id]);
-
-  const formik = useFormik({
-    initialValues: {
-      title: "",
-      price: "",
-      slug: "",
-      brand: "",
-      description: [""],
-      infomations: {
-        DESCRIPTION: "",
-        WARRANTY: "",
-        DELIVERY: "",
-        PAYMENT: "",
-      },
-      category: "",
-      variants: [],
-      quantity: 0,
-      isActive: true,
-      thumb: "",
-      images: [],
-    },
-    validationSchema: Yup.object({
-      title: Yup.string().required("Title is required"),
-      price: Yup.number().required("Price is required"),
-      slug: Yup.string().required("Slug is required"),
-      brand: Yup.string().required("Brand is required"),
-    }),
-    onSubmit: async (values) => {
-      const method = id ? "PUT" : "POST";
-      const url = id ? `/api/product/${id}` : "/api/product";
-
-      console.log("🚀 Submitting product:", values);
-
-      await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
+    return () => {
+      createdObjectUrls.current.forEach((u) => {
+        try {
+          URL.revokeObjectURL(u);
+        } catch {}
       });
+      createdObjectUrls.current = [];
+    };
+  }, [initialData]);
 
-      navigate("/admin/products");
+  const initialFormik = {
+    title: initialData?.title || "",
+    slug: initialData?.slug || "",
+    price: initialData?.price || "",
+    brand: initialData?.brand || "",
+    description: Array.isArray(initialData?.description)
+      ? initialData.description.join("\n")
+      : initialData?.description || "",
+    category: initialData?.category?._id || initialData?.category || "",
+    infomations: initialData?.infomations || {
+      DESCRIPTION: "",
+      WARRANTY: "",
+      DELIVERY: "",
+      PAYMENT: "",
     },
-  });
-
-  const handleThumbChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setThumbPreview(URL.createObjectURL(file));
-      formik.setFieldValue("thumb", file);
-    }
+    variants:
+      initialData?.variants?.length > 0
+        ? initialData.variants
+        : [{ label: "", variants: [""] }],
+    instock: initialData?.instock ?? true,
+    isActive: initialData?.isActive ?? true,
+    quantity: initialData?.quantity ?? 0,
+    thumb: initialData?.thumb || null,
+    images: flattenImageUrls(initialData?.images) || [],
   };
-
-  const handleImagesChange = (e) => {
-    const files = Array.from(e.target.files);
-    const previews = files.map((file) => URL.createObjectURL(file));
-    setImagePreviews(previews);
-    formik.setFieldValue("images", files);
-  };
-
-  if (loading) return <p>Loading...</p>;
 
   return (
-    <form
-      onSubmit={formik.handleSubmit}
-      className="space-y-6 bg-white p-6 rounded-xl shadow-lg"
+    <Formik
+      enableReinitialize
+      initialValues={initialFormik}
+      onSubmit={(values, { setSubmitting }) => {
+        onSubmit(values); // ✅ chỉ trả values, không tự build FormData
+        setSubmitting(false);
+      }}
     >
-      <h2 className="text-2xl font-bold text-red-600">
-        {id ? "Edit Product" : "Add Product"}
-      </h2>
+      {({ setFieldValue, values }) => {
+        const handleThumbChange = (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          setFieldValue("thumb", file);
+          const url = URL.createObjectURL(file);
+          createdObjectUrls.current.push(url);
+          setPreviewThumb(url);
+        };
 
-      {/* Title & Slug */}
-      <div className="grid grid-cols-2 gap-4">
-        <input
-          type="text"
-          name="title"
-          placeholder="Product Title"
-          onChange={formik.handleChange}
-          value={formik.values.title}
-          className="border p-2 rounded w-full"
-        />
-        <input
-          type="text"
-          name="slug"
-          placeholder="Slug"
-          onChange={formik.handleChange}
-          value={formik.values.slug}
-          className="border p-2 rounded w-full"
-        />
-      </div>
+        const handleImagesChange = (e) => {
+          const files = e.target.files ? Array.from(e.target.files) : [];
+          if (!files.length) return;
+          setFieldValue("images", files);
+          const urls = files.map((f) => {
+            const u = URL.createObjectURL(f);
+            createdObjectUrls.current.push(u);
+            return u;
+          });
+          setPreviewImages(urls);
+        };
 
-      {/* Price & Brand */}
-      <div className="grid grid-cols-2 gap-4">
-        <input
-          type="number"
-          name="price"
-          placeholder="Price"
-          onChange={formik.handleChange}
-          value={formik.values.price}
-          className="border p-2 rounded w-full"
-        />
-        <input
-          type="text"
-          name="brand"
-          placeholder="Brand"
-          onChange={formik.handleChange}
-          value={formik.values.brand}
-          className="border p-2 rounded w-full"
-        />
-      </div>
+        const removeImageAt = (index) => {
+          setFieldValue(
+            "images",
+            values.images.filter((_, i) => i !== index)
+          );
+          setPreviewImages((prev) => prev.filter((_, i) => i !== index));
+        };
 
-      {/* Description */}
-      <div>
-        <label className="block mb-2 font-semibold">Description</label>
-        {formik.values.description.map((desc, idx) => (
-          <input
-            key={idx}
-            type="text"
-            value={desc}
-            onChange={(e) => {
-              const descArr = [...formik.values.description];
-              descArr[idx] = e.target.value;
-              formik.setFieldValue("description", descArr);
-            }}
-            className="border p-2 rounded w-full mb-2"
-          />
-        ))}
-        <button
-          type="button"
-          onClick={() =>
-            formik.setFieldValue("description", [
-              ...formik.values.description,
-              "",
-            ])
-          }
-          className="text-sm text-blue-600"
-        >
-          + Add Description
-        </button>
-      </div>
+        const removeThumb = () => {
+          setFieldValue("thumb", null);
+          setPreviewThumb("");
+        };
 
-      {/* Infomations */}
-      <div>
-        <label className="block mb-2 font-semibold">Infomations</label>
-        {["DESCRIPTION", "WARRANTY", "DELIVERY", "PAYMENT"].map((key) => (
-          <textarea
-            key={key}
-            name={`infomations.${key}`}
-            placeholder={key}
-            value={formik.values.infomations[key] || ""}
-            onChange={formik.handleChange}
-            className="border p-2 rounded w-full mb-2"
-          />
-        ))}
-      </div>
+        return (
+          <Form className="space-y-4">
+            {/* Title + Slug */}
+            <div className="grid grid-cols-2 gap-4">
+              <Field name="title" placeholder="Product Title" className="border p-2 w-full rounded" />
+              <Field name="slug" placeholder="Slug" className="border p-2 w-full rounded" />
+            </div>
 
-      {/* Category */}
-      <div>
-        <label className="block mb-2 font-semibold">Category</label>
-        <select
-          name="category"
-          value={formik.values.category}
-          onChange={formik.handleChange}
-          className="border p-2 rounded w-full"
-        >
-          <option value="">Select category</option>
-          {categories.map((c) => (
-            <option key={c._id} value={c._id}>
-              {c.title}
-            </option>
-          ))}
-        </select>
-      </div>
+            {/* Price + Brand + Quantity */}
+            <div className="grid grid-cols-3 gap-4">
+              <Field name="price" type="number" placeholder="Price" className="border p-2 w-full rounded" />
+              <Field name="brand" placeholder="Brand" className="border p-2 w-full rounded" />
+              <Field name="quantity" type="number" placeholder="Quantity" className="border p-2 w-full rounded" />
+            </div>
 
-      {/* Variants */}
-      <div>
-        <label className="block mb-2 font-semibold">Variants</label>
-        {formik.values.variants.map((v, idx) => (
-          <div key={idx} className="flex gap-2 mb-2">
-            <input
-              type="text"
-              placeholder="Label"
-              value={v.label}
-              onChange={(e) => {
-                const newVariants = [...formik.values.variants];
-                newVariants[idx].label = e.target.value;
-                formik.setFieldValue("variants", newVariants);
-              }}
-              className="border p-2 rounded w-1/3"
-            />
-            <input
-              type="text"
-              placeholder="Variants (comma separated)"
-              value={v.variants.join(", ")}
-              onChange={(e) => {
-                const newVariants = [...formik.values.variants];
-                newVariants[idx].variants = e.target.value
-                  .split(",")
-                  .map((s) => s.trim());
-                formik.setFieldValue("variants", newVariants);
-              }}
-              className="border p-2 rounded w-2/3"
-            />
-          </div>
-        ))}
-        <button
-          type="button"
-          onClick={() =>
-            formik.setFieldValue("variants", [
-              ...formik.values.variants,
-              { label: "", variants: [] },
-            ])
-          }
-          className="text-sm text-blue-600"
-        >
-          + Add Variant
-        </button>
-      </div>
+            {/* Description */}
+            <Field name="description" as="textarea" placeholder="Description" className="border p-2 w-full rounded h-28" />
 
-      {/* Quantity & Active */}
-      <div className="grid grid-cols-2 gap-4">
-        <input
-          type="number"
-          name="quantity"
-          placeholder="Quantity"
-          onChange={formik.handleChange}
-          value={formik.values.quantity}
-          className="border p-2 rounded w-full"
-        />
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            name="isActive"
-            checked={formik.values.isActive}
-            onChange={formik.handleChange}
-          />
-          Active
-        </label>
-      </div>
+            {/* Informations */}
+            <div>
+              <h3 className="font-semibold mb-2">Informations</h3>
+              {["DESCRIPTION", "WARRANTY", "DELIVERY", "PAYMENT"].map((k) => (
+                <div key={k} className="flex gap-2 mb-2">
+                  <label className="w-28">{k}:</label>
+                  <Field name={`infomations.${k}`} placeholder={k} className="border p-2 flex-1 rounded" />
+                </div>
+              ))}
+            </div>
 
-      {/* Thumbnail */}
-      <div>
-        <label className="block mb-2 font-semibold">Thumbnail</label>
-        {thumbPreview && (
-          <img
-            src={thumbPreview}
-            alt="Thumb Preview"
-            className="w-32 h-32 object-cover mb-2 rounded"
-          />
-        )}
-        <input type="file" accept="image/*" onChange={handleThumbChange} />
-        <input
-          type="text"
-          placeholder="Or paste image URL"
-          value={formik.values.thumb}
-          onChange={(e) => {
-            formik.setFieldValue("thumb", e.target.value);
-            setThumbPreview(e.target.value);
-          }}
-          className="border p-2 rounded w-full mt-2"
-        />
-      </div>
+            {/* Variants */}
+            <div>
+              <h3 className="font-semibold mb-2">Variants</h3>
+              <FieldArray name="variants">
+                {(arrayHelpers) => (
+                  <div className="space-y-4">
+                    {(values.variants || []).map((variant, vIdx) => (
+                      <div key={vIdx} className="border p-2 rounded space-y-2 bg-gray-50">
+                        <Field
+                          name={`variants[${vIdx}].label`}
+                          placeholder="Variant Label"
+                          className="border p-2 w-full rounded"
+                        />
+                        <FieldArray name={`variants[${vIdx}].variants`}>
+                          {(innerHelpers) => (
+                            <div className="space-y-2">
+                              {(variant.variants || []).map((val, iIdx) => (
+                                <div key={iIdx} className="flex gap-2">
+                                  <Field
+                                    name={`variants[${vIdx}].variants[${iIdx}]`}
+                                    placeholder="Value"
+                                    className="border p-2 flex-1 rounded"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => innerHelpers.remove(iIdx)}
+                                    className="px-2 bg-red-500 text-white rounded"
+                                  >
+                                    ❌
+                                  </button>
+                                </div>
+                              ))}
+                              <button
+                                type="button"
+                                onClick={() => innerHelpers.push("")}
+                                className="px-3 py-1 bg-green-500 text-white rounded"
+                              >
+                                + Add Value
+                              </button>
+                            </div>
+                          )}
+                        </FieldArray>
+                        <div className="flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() => arrayHelpers.remove(vIdx)}
+                            className="px-2 py-1 bg-red-600 text-white rounded"
+                          >
+                            Remove Variant
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => arrayHelpers.push({ label: "", variants: [""] })}
+                      className="px-3 py-1 bg-blue-600 text-white rounded"
+                    >
+                      + Add Variant Group
+                    </button>
+                  </div>
+                )}
+              </FieldArray>
+            </div>
 
-      {/* Images */}
-      <div>
-        <label className="block mb-2 font-semibold">Images</label>
-        <div className="flex gap-2 flex-wrap mb-2">
-          {imagePreviews.map((img, idx) => (
-            <img
-              key={idx}
-              src={img}
-              alt={`Preview ${idx}`}
-              className="w-24 h-24 object-cover rounded"
-            />
-          ))}
-        </div>
-        <input
-          type="file"
-          multiple
-          accept="image/*"
-          onChange={handleImagesChange}
-        />
-      </div>
+            {/* Category */}
+            <div>
+              <label className="block mb-1 font-semibold">Category</label>
+              <Field as="select" name="category" className="border p-2 w-full rounded">
+                <option value="">Select category</option>
+                {categories.map((c) => (
+                  <option key={c._id} value={c._id}>
+                    {c.title}
+                  </option>
+                ))}
+              </Field>
+            </div>
 
-      <button
-        type="submit"
-        className="bg-red-600 text-white px-6 py-2 rounded-lg"
-      >
-        {id ? "Update Product" : "Create Product"}
-      </button>
-    </form>
+            {/* instock + isActive */}
+            <div className="flex gap-4 items-center">
+              <label className="flex items-center gap-2">
+                <Field type="checkbox" name="instock" />
+                In Stock
+              </label>
+              <label className="flex items-center gap-2">
+                <Field type="checkbox" name="isActive" />
+                Active
+              </label>
+            </div>
+
+            {/* Thumbnail */}
+            <div>
+              <label className="block mb-1 font-semibold">Thumbnail</label>
+              <div className="flex items-center gap-4">
+                {previewThumb ? (
+                  <div className="relative inline-block">
+                    <img src={previewThumb} alt="thumb" className="w-28 h-28 object-cover rounded border" />
+                    <button
+                      type="button"
+                      onClick={removeThumb}
+                      className="absolute top-0 right-0 bg-red-600 text-white rounded-full w-6 h-6 text-xs"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : (
+                  <div className="w-28 h-28 bg-gray-100 flex items-center justify-center rounded border text-sm text-gray-500">
+                    No thumb
+                  </div>
+                )}
+                <input type="file" accept="image/*" onChange={handleThumbChange} />
+              </div>
+            </div>
+
+            {/* Images */}
+            <div>
+              <label className="block mb-1 font-semibold">Images</label>
+              <div className="flex gap-2 flex-wrap mb-2">
+                {previewImages.length > 0 ? (
+                  previewImages.map((img, idx) => (
+                    <div key={idx} className="relative">
+                      <img src={img} alt={`preview-${idx}`} className="w-24 h-24 object-cover rounded border" />
+                      <button
+                        type="button"
+                        onClick={() => removeImageAt(idx)}
+                        className="absolute top-0 right-0 bg-red-600 text-white rounded-full w-6 h-6 text-xs"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-sm text-gray-500">No images selected</div>
+                )}
+              </div>
+              <input type="file" accept="image/*" multiple onChange={handleImagesChange} />
+            </div>
+
+            {/* Submit */}
+            <div>
+              <button type="submit" className="px-4 py-2 bg-red-600 text-white rounded">
+                {initialData ? "Update Product" : "Create Product"}
+              </button>
+            </div>
+          </Form>
+        );
+      }}
+    </Formik>
   );
 };
 
