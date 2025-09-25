@@ -4,13 +4,20 @@ const crypto = require("crypto"); // For generating secure tokens
 // Declare the Schema of the Mongo model
 var userSchema = new mongoose.Schema(
   {
-    firstname: {
+    firstName: {
       type: String,
       required: true,
     },
-    lastname: {
+    lastName: {
       type: String,
       required: true,
+    },
+    // Keep old fields for backward compatibility
+    firstname: {
+      type: String,
+    },
+    lastname: {
+      type: String,
     },
     email: {
       type: String,
@@ -68,6 +75,10 @@ var userSchema = new mongoose.Schema(
     },
     registerToken: {
       type: String,
+    },
+    avatar: {
+      type: String,
+      default: null,
     },
   },
   {

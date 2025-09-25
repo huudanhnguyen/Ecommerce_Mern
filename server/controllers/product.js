@@ -207,41 +207,98 @@ const deleteProduct = asyncHandler(async (req, res) => {
 const updateProduct = asyncHandler(async (req, res) => {
   const { pid } = req.params;
   try {
+    const product = await Product.findById(pid);
+    if (!product) {
+      return res.status(404).json({ success: false, message: "Product not found" });
+    }
+
+    // Nếu có category, kiểm tra xem là ID hay slug
     if (req.body.category) {
-      const foundCategory = await ProductCategory.findOne({
-        title: req.body.category,
-      });
-      if (!foundCategory)
-        throw new Error(`Product Category '${req.body.category}' not found.`);
+      let foundCategory;
+      
+      // Kiểm tra xem category có phải là ObjectId hợp lệ không
+      if (mongoose.Types.ObjectId.isValid(req.body.category)) {
+        // Nếu là ObjectId, tìm theo _id
+        foundCategory = await ProductCategory.findById(req.body.category);
+      } else {
+        // Nếu không phải ObjectId, tìm theo slug
+        foundCategory = await ProductCategory.findOne({
+          slug: req.body.category.toLowerCase(),
+        });
+      }
+      
+      if (!foundCategory) {
+        return res.status(400).json({ success: false, message: "Category not found" });
+      }
       req.body.category = foundCategory._id;
     }
+
+    // Nếu có title → tạo lại slug
     if (req.body.title) {
       req.body.slug = slugify(req.body.title, { lower: true });
     }
 
-    const product = await Product.findById(pid);
-    if (!product) {
-      if (req.files) {
-        const publicIds = req.files.map((file) => file.filename);
-        await cloudinary.api.delete_resources(publicIds);
+    // Parse JSON cho infomations & variants
+    if (req.body.infomations) {
+      try {
+        req.body.infomations = JSON.parse(req.body.infomations);
+      } catch {
+        req.body.infomations = {};
       }
-      return res.status(404).json({ message: "Product not found" });
+    }
+    if (req.body.variants) {
+      try {
+        req.body.variants = JSON.parse(req.body.variants);
+      } catch {
+        req.body.variants = [];
+      }
     }
 
-    if (req.files && req.files.length > 0) {
-      if (product.images && product.images.length > 0) {
-        const oldImagePublicIds = product.images.map((img) => img.public_id);
-        await cloudinary.api.delete_resources(oldImagePublicIds);
+    // Xử lý thumb (replace)
+    if (req.files && req.files.thumb && req.files.thumb.length > 0) {
+      if (product.thumb) {
+        const publicId = product.thumb.split("/").pop().split(".")[0]; // lấy public_id từ URL
+        await cloudinary.uploader.destroy(publicId);
       }
-      req.body.images = req.files.map((file) => ({
-        url: file.path,
-        public_id: file.filename,
-      }));
+      req.body.thumb = req.files.thumb[0].path;
     }
 
+    // Xử lý images
+    // Trường hợp 1: Có upload ảnh mới -> replace toàn bộ bằng ảnh mới + (option) giữ lại ảnh cũ nếu client gửi danh sách existing
+    if (req.files && req.files.images && req.files.images.length > 0) {
+      // Lấy danh sách URL ảnh cũ cần giữ lại (nếu client gửi)
+      let existingImages = [];
+      if (req.body.existingImages) {
+        try {
+          existingImages = JSON.parse(req.body.existingImages);
+        } catch {}
+      }
+
+      // Xóa những ảnh cũ không còn trong existingImages
+      const imagesToDelete = (product.images || []).filter(
+        (url) => !existingImages.includes(url)
+      );
+      if (imagesToDelete.length > 0) {
+        const oldPublicIds = imagesToDelete.map((url) => url.split("/").pop().split(".")[0]);
+        await cloudinary.api.delete_resources(oldPublicIds);
+      }
+
+      // Ảnh mới upload
+      const uploaded = req.files.images.map((file) => file.path);
+      req.body.images = [...existingImages, ...uploaded];
+    } else if (req.body.existingImages) {
+      // Trường hợp 2: Không upload ảnh mới -> giữ lại danh sách ảnh cũ client gửi
+      try {
+        const existingImages = JSON.parse(req.body.existingImages);
+        req.body.images = existingImages;
+      } catch {
+        // nếu parse fail thì bỏ qua, giữ nguyên product.images
+      }
+    }
+
+    // Cập nhật sản phẩm
     Object.assign(product, req.body);
     const updatedProduct = await product.save();
-    await updatedProduct.populate("category", "title _id");
 
     return res.status(200).json({
       success: true,
@@ -249,20 +306,11 @@ const updateProduct = asyncHandler(async (req, res) => {
       updatedProduct,
     });
   } catch (error) {
-    if (req.files && req.files.length > 0) {
-      console.log(
-        "An error occurred during product update. Cleaning up uploaded files..."
-      );
-      const publicIds = req.files.map((file) => file.filename);
-      await cloudinary.api.delete_resources(publicIds);
-      console.log("Cleanup successful.");
-    }
-    if (error.message.includes("not found")) {
-      return res.status(400).json({ success: false, message: error.message });
-    }
-    throw error;
+    console.error("❌ Update Product Error:", error);
+    return res.status(500).json({ success: false, message: error.message });
   }
 });
+
 const ratings = asyncHandler(async (req, res) => {
   const { _id } = req.user;  // lấy userId từ token
   const { star, comment, name, postedBy  } = req.body;

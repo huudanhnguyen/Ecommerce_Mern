@@ -24,7 +24,10 @@ router.get("/:pid", ctrls.getProduct);
 router.put(
   "/:pid",
   [verifyToken, isAdmin],
-  uploadCloud.array("images", 10),
+  uploadCloud.fields([
+    { name: "thumb", maxCount: 1 },
+    { name: "images", maxCount: 10 },
+  ]),
   ctrls.updateProduct
 );
 router.delete("/:id", [verifyToken, isAdmin], ctrls.deleteProduct);

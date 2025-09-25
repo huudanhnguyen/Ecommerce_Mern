@@ -6,6 +6,7 @@ const { generateToken, generateRefreshToken } = require("../middlewares/jwt");
 const crypto = require("crypto"); // For generating secure tokens
 const sendEmail = require("../ultils/sendMail"); // Import hàm gửi email
 const makeToken = require("uniqid");
+const cloudinary = require("cloudinary").v2;
 
 // server/controllers/user.js
 
@@ -18,6 +19,10 @@ const register = asyncHandler(async (req, res) => {
       message: "All fields are required",
     });
   }
+
+  // Map old field names to new ones
+  const firstName = firstname;
+  const lastName = lastname;
 
   const userExists = await User.findOne({ email });
   if (userExists) {
@@ -53,8 +58,10 @@ const finalRegister = asyncHandler(async (req, res) => {
     email: cookie?.dataRegister?.email,
     password: cookie?.dataRegister?.password,
     mobile: cookie?.dataRegister?.mobile,
-    firstname: cookie?.dataRegister?.firstname,
-    lastname: cookie?.dataRegister?.lastname,
+    firstName: cookie?.dataRegister?.firstname,
+    lastName: cookie?.dataRegister?.lastname,
+    firstname: cookie?.dataRegister?.firstname, // Keep for backward compatibility
+    lastname: cookie?.dataRegister?.lastname, // Keep for backward compatibility
   });
   if (newUser)
     return res.redirect(`${process.env.CLIENT_URL}/finalRegister/success`);
@@ -575,6 +582,278 @@ const removeFromWishlist = asyncHandler(async (req, res) => {
   res.json({ success: true, wishlist: user.wishlist });
 });
 
+// ================== ADMIN USER MANAGEMENT ==================
+
+// Lấy tất cả users (admin only)
+const getAllUsersAdmin = asyncHandler(async (req, res) => {
+  try {
+    const queries = { ...req.query };
+    let query = {};
+
+    // Role filter
+    if (queries.role) {
+      query.role = queries.role;
+    }
+
+    // Search filter
+    if (queries.search) {
+      query.$or = [
+        { firstName: { $regex: queries.search, $options: "i" } },
+        { lastName: { $regex: queries.search, $options: "i" } },
+        { email: { $regex: queries.search, $options: "i" } },
+      ];
+    }
+
+    // Pagination
+    const page = Number(queries.page) || 1;
+    const limit = Number(queries.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Sort
+    let sort = { createdAt: -1 };
+    if (queries.sort) {
+      switch (queries.sort) {
+        case "name-asc":
+          sort = { firstName: 1 };
+          break;
+        case "name-desc":
+          sort = { firstName: -1 };
+          break;
+        case "email-asc":
+          sort = { email: 1 };
+          break;
+        case "email-desc":
+          sort = { email: -1 };
+          break;
+        case "newest":
+          sort = { createdAt: -1 };
+          break;
+        case "oldest":
+          sort = { createdAt: 1 };
+          break;
+      }
+    }
+
+    const users = await User.find(query)
+      .skip(skip)
+      .limit(limit)
+      .sort(sort)
+      .select("-password -refreshToken");
+
+    // Map users to ensure firstName and lastName are available
+    const mappedUsers = users.map(user => ({
+      ...user.toObject(),
+      firstName: user.firstName || user.firstname || "",
+      lastName: user.lastName || user.lastname || "",
+    }));
+
+    const totalUsers = await User.countDocuments(query);
+    const totalPages = Math.ceil(totalUsers / limit);
+
+    return res.json({
+      success: true,
+      users: mappedUsers,
+      totalPages,
+      currentPage: page,
+      totalUsers,
+    });
+  } catch (error) {
+    console.error("❌ Error in getAllUsersAdmin:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+});
+
+// Lấy user theo ID (admin only)
+const getUserByIdAdmin = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  
+  const user = await User.findById(userId).select("-password -refreshToken");
+  
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found",
+    });
+  }
+
+  // Map user to ensure firstName and lastName are available
+  const mappedUser = {
+    ...user.toObject(),
+    firstName: user.firstName || user.firstname || "",
+    lastName: user.lastName || user.lastname || "",
+  };
+
+  return res.json({
+    success: true,
+    userData: mappedUser,
+  });
+});
+
+// Tạo user mới (admin only)
+const createUserAdmin = asyncHandler(async (req, res) => {
+  const { firstName, lastName, email, mobile, role = "user", isBlocked = false } = req.body;
+
+  if (!firstName || !lastName || !email) {
+    return res.status(400).json({
+      success: false,
+      message: "First name, last name, and email are required",
+    });
+  }
+
+  // Check if user already exists
+  const userExists = await User.findOne({ email });
+  if (userExists) {
+    return res.status(400).json({
+      success: false,
+      message: "Email has already been registered",
+    });
+  }
+
+  // Generate random password
+  const password = Math.random().toString(36).slice(-8);
+
+  // Handle avatar upload
+  let avatar = null;
+  if (req.file) {
+    avatar = req.file.path;
+  }
+
+  const newUser = new User({
+    firstName,
+    lastName,
+    email,
+    mobile: mobile || "",
+    password,
+    role,
+    isBlocked,
+    avatar,
+  });
+
+  await newUser.save();
+
+  return res.status(201).json({
+    success: true,
+    message: "User created successfully",
+    user: {
+      _id: newUser._id,
+      firstName: newUser.firstName,
+      lastName: newUser.lastName,
+      email: newUser.email,
+      mobile: newUser.mobile,
+      role: newUser.role,
+      isBlocked: newUser.isBlocked,
+    },
+  });
+});
+
+// Cập nhật user (admin only)
+const updateUserAdmin = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const { firstName, lastName, email, mobile, role, isBlocked } = req.body;
+
+  const user = await User.findById(userId);
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found",
+    });
+  }
+
+  // Check if email is being changed and if it already exists
+  if (email && email !== user.email) {
+    const emailExists = await User.findOne({ email, _id: { $ne: userId } });
+    if (emailExists) {
+      return res.status(400).json({
+        success: false,
+        message: "Email has already been registered",
+      });
+    }
+  }
+
+  // Handle avatar upload
+  let avatar = user.avatar;
+  if (req.file) {
+    // Delete old avatar if exists
+    if (user.avatar) {
+      const publicId = user.avatar.split("/").pop().split(".")[0];
+      await cloudinary.uploader.destroy(publicId);
+    }
+    avatar = req.file.path;
+  }
+
+  // Update user
+  const updatedUser = await User.findByIdAndUpdate(
+    userId,
+    {
+      firstName: firstName || user.firstName,
+      lastName: lastName || user.lastName,
+      email: email || user.email,
+      mobile: mobile !== undefined ? mobile : user.mobile,
+      role: role || user.role,
+      isBlocked: isBlocked !== undefined ? isBlocked : user.isBlocked,
+      avatar,
+    },
+    { new: true }
+  ).select("-password -refreshToken");
+
+  return res.json({
+    success: true,
+    message: "User updated successfully",
+    updatedUser,
+  });
+});
+
+// Xóa user (admin only)
+const deleteUserAdmin = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+
+  const user = await User.findById(userId);
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found",
+    });
+  }
+
+  await User.findByIdAndDelete(userId);
+
+  return res.json({
+    success: true,
+    message: "User deleted successfully",
+  });
+});
+
+// Toggle block user (admin only)
+const toggleBlockUserAdmin = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+
+  const user = await User.findById(userId);
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found",
+    });
+  }
+
+  user.isBlocked = !user.isBlocked;
+  await user.save();
+
+  return res.json({
+    success: true,
+    message: `User ${user.isBlocked ? "blocked" : "unblocked"} successfully`,
+    user: {
+      _id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      isBlocked: user.isBlocked,
+    },
+  });
+});
+
 module.exports = {
   register,
   login,
@@ -595,4 +874,11 @@ module.exports = {
   updateCart,
   getWishlist,
   removeFromWishlist,
+  // Admin user management
+  getAllUsersAdmin,
+  getUserByIdAdmin,
+  createUserAdmin,
+  updateUserAdmin,
+  deleteUserAdmin,
+  toggleBlockUserAdmin,
 };

@@ -59,39 +59,88 @@ const createBlog = asyncHandler(async (req, res) => {
 const updateBlog = asyncHandler(async (req, res) => {
     const { bid } = req.params;
     try {
-        if (req.body.category) {
-            // Tìm category mới bằng tên
-            const foundCategory = await BlogCategory.findOne({ title: req.body.category });
-            if (!foundCategory) {
-                throw new Error(`Blog Category '${req.body.category}' not found.`);
-            }
-            req.body.category = foundCategory._id;
-        }
         const blog = await Blog.findById(bid);
         if (!blog) {
             if (req.files) {
                 const publicIds = req.files.map(file => file.filename);
                 await cloudinary.api.delete_resources(publicIds);
             }
-            return res.status(404).json({ message: 'Blog not found' });
+            return res.status(404).json({ success: false, message: 'Blog not found' });
         }
+
+        // Xử lý category
+        if (req.body.category) {
+            // Kiểm tra nếu category là ObjectId hợp lệ
+            if (req.body.category.match(/^[0-9a-fA-F]{24}$/)) {
+                // Nếu là ObjectId, tìm category theo _id
+                const foundCategory = await BlogCategory.findById(req.body.category);
+                if (!foundCategory) {
+                    throw new Error(`Blog Category with ID '${req.body.category}' not found.`);
+                }
+                req.body.category = foundCategory._id;
+            } else {
+                // Nếu không phải ObjectId, tìm theo title
+                const foundCategory = await BlogCategory.findOne({ title: req.body.category });
+                if (!foundCategory) {
+                    throw new Error(`Blog Category '${req.body.category}' not found.`);
+                }
+                req.body.category = foundCategory._id;
+            }
+        }
+
         if (req.body.title) {
             req.body.slug = slugify(req.body.title, { lower: true });
         }
-        if (req.files && req.files.length > 0) {
-            if (blog.images && blog.images.length > 0) {
-                const oldImagePublicIds = blog.images.map(img => img.public_id);
-                await cloudinary.api.delete_resources(oldImagePublicIds);
+
+        // Xử lý images (merge new and existing)
+        let finalImages = blog.images || [];
+        let existingImagesFromClient = [];
+
+        if (req.body.existingImages) {
+            try {
+                existingImagesFromClient = JSON.parse(req.body.existingImages);
+            } catch (e) {
+                console.error("Error parsing existingImages:", e);
             }
-            req.body.images = req.files.map(file => ({
+        }
+
+        // Nếu có file ảnh mới được upload
+        if (req.files && req.files.images && req.files.images.length > 0) {
+            // Xóa các ảnh cũ không còn trong existingImagesFromClient
+            const imagesToDelete = finalImages.filter(
+                (img) => !existingImagesFromClient.some(existing => existing.url === img.url)
+            );
+            if (imagesToDelete.length > 0) {
+                const oldPublicIds = imagesToDelete.map((img) => img.public_id);
+                await cloudinary.api.delete_resources(oldPublicIds);
+            }
+
+            // Thêm các ảnh mới upload
+            const newUploadedImages = req.files.images.map((file) => ({
                 url: file.path,
                 public_id: file.filename
             }));
+            finalImages = [...existingImagesFromClient, ...newUploadedImages];
+        } else {
+            // Nếu không có ảnh mới upload, chỉ dùng existingImagesFromClient
+            // Cần xóa những ảnh cũ không còn trong existingImagesFromClient
+            const imagesToDelete = finalImages.filter(
+                (img) => !existingImagesFromClient.some(existing => existing.url === img.url)
+            );
+            if (imagesToDelete.length > 0) {
+                const oldPublicIds = imagesToDelete.map((img) => img.public_id);
+                await cloudinary.api.delete_resources(oldPublicIds);
+            }
+            finalImages = existingImagesFromClient;
         }
+        req.body.images = finalImages;
+
+        // Cập nhật blog
         Object.assign(blog, req.body);
         const updatedBlog = await blog.save();
-        await updatedBlog.populate('category', 'name');
+        await updatedBlog.populate('category', 'title _id');
         await updatedBlog.populate('author', 'firstname lastname');
+        
         return res.status(200).json({
             success: true,
             message: 'Blog updated successfully',
