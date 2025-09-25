@@ -1,11 +1,13 @@
 // src/components/DealDaily.jsx
 
 import React, { useState, useEffect } from "react";
+import ReactDOM from "react-dom";
 import { FaStar } from "react-icons/fa";
 import { formatPrice, renderRatingStars } from "../utils/helpers.jsx";
 import { getAllProducts } from "../apis/product";
 import { Link } from "react-router-dom";
 import path from "../utils/path.js";
+import QuickViewModal from "./QuickViewModal";
 
 const DealDaily = () => {
   const [dealProduct, setDealProduct] = useState(null);
@@ -111,7 +113,11 @@ const DealDaily = () => {
   // Lính gác: Hiển thị trạng thái loading
   if (!dealProduct) {
     return (
-      <div className="w-full border p-4 rounded-md">Loading Daily Deal...</div>
+      <div className="w-full border p-3 sm:p-4 rounded-md bg-white shadow-sm">
+        <div className="flex items-center justify-center h-32 sm:h-40">
+          <div className="text-gray-500 text-sm">Loading Daily Deal...</div>
+        </div>
+      </div>
     );
   }
 
@@ -123,45 +129,45 @@ const DealDaily = () => {
   };
 
   return (
-    <div className="w-full border p-4 rounded-md h-full flex flex-col justify-between">
+    <div className="w-full border p-3 sm:p-4 rounded-md h-full flex flex-col justify-between bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
       <Link
         to={`/${path.DETAIL_PRODUCT}/${dealProduct._id}/${dealProduct.slug}`}
       >
-        <div className="flex items-center justify-between pt-10">
+        <div className="flex items-center justify-between pt-6 sm:pt-8">
           <div className="flex items-center gap-2">
-            <FaStar color="red" size={20} />
-            <h3 className="font-bold text-xl uppercase">Daily Deals</h3>
+            <FaStar color="red" size={16} className="sm:w-5 sm:h-5" />
+            <h3 className="font-bold text-lg sm:text-xl uppercase text-gray-800">Daily Deals</h3>
           </div>
         </div>
-        <div className="text-center pt-4">
+        <div className="text-center pt-3 sm:pt-4">
           <img
             src={dealProduct.thumb}
             alt={dealProduct.title}
-            className="w-full h-auto object-contain mb-4"
+            className="w-full h-32 sm:h-40 lg:h-48 object-contain mb-3 sm:mb-4"
           />
-          <h4 className="font-semibold truncate mb-2">
+          <h4 className="font-semibold truncate mb-2 text-sm sm:text-base text-gray-700">
             {dealProduct.title.toUpperCase()}
           </h4>
           <div className="flex justify-center mb-2">
             {renderRatingStars(dealProduct.totalRating)}
           </div>
-          <p className="text-lg font-semibold text-gray-800 mb-4">
+          <p className="text-base sm:text-lg font-semibold text-red-600 mb-3 sm:mb-4">
             {formatPrice(dealProduct.price)}
           </p>
         </div>
       </Link>
       <div>
-        <div className="grid grid-cols-3 gap-2 text-center mb-4">
-          <div className="bg-gray-100 p-2 rounded-md">
-            <div className="text-2xl font-bold">{timeLeft.hours}</div>
+        <div className="grid grid-cols-3 gap-1 sm:gap-2 text-center mb-3 sm:mb-4">
+          <div className="bg-gray-100 p-1.5 sm:p-2 rounded-md">
+            <div className="text-lg sm:text-xl font-bold text-red-600">{timeLeft.hours}</div>
             <div className="text-xs text-gray-500">Hours</div>
           </div>
-          <div className="bg-gray-100 p-2 rounded-md">
-            <div className="text-2xl font-bold">{timeLeft.minutes}</div>
+          <div className="bg-gray-100 p-1.5 sm:p-2 rounded-md">
+            <div className="text-lg sm:text-xl font-bold text-red-600">{timeLeft.minutes}</div>
             <div className="text-xs text-gray-500">Minutes</div>
           </div>
-          <div className="bg-gray-100 p-2 rounded-md">
-            <div className="text-2xl font-bold">{timeLeft.seconds}</div>
+          <div className="bg-gray-100 p-1.5 sm:p-2 rounded-md">
+            <div className="text-lg sm:text-xl font-bold text-red-600">{timeLeft.seconds}</div>
             <div className="text-xs text-gray-500">Seconds</div>
           </div>
         </div>
