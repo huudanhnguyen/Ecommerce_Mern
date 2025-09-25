@@ -12,7 +12,7 @@ import {
   ArrowUpDown,
   Image as ImageIcon
 } from 'lucide-react';
-import { getSliders, deleteSlider, toggleSliderStatus } from '../../services/slider';
+import { getSliders, deleteSlider, toggleSliderStatus } from '../../../services/slider';
 
 const SliderList = () => {
   const [sliders, setSliders] = useState([]);

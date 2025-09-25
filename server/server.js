@@ -18,6 +18,9 @@ app.use(express.json()); // Middleware to parse JSON data
 app.use(express.urlencoded({ extended: true })); // Middleware to parse JSON and URL-encoded data
 app.use(cookieParser());
 
+// Serve static files from uploads directory
+app.use('/uploads', express.static('uploads'));
+
 
 const PORT = process.env.PORT || 8888;      // Default port if not specified in .env
 connectDB(); // Connect to MongoDB

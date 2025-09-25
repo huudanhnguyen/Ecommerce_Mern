@@ -1,43 +1,119 @@
 // src/components/BigAdBanners.jsx
 
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { useSliders } from '../hooks/useSliders';
 
-const banners = {
-    electronicSale: "https://digital-world-2.myshopify.com/cdn/shop/files/Blue_And_Yellow_Modern_Electronic_Sale_Instagram_Post_580_x_655_px_1_600x.png?v=1750860746",
-    juiceBlender: "https://digital-world-2.myshopify.com/cdn/shop/files/Orange_Colorful_Juicer_Photo_Instagram_Post_280_x_338_px_1_400x.png?v=1750860819",
-    cookwareSet: "https://digital-world-2.myshopify.com/cdn/shop/files/Red_and_Yellow_Classic_Neutrals_Cooking_Set_Product_Summer_Instagram_Post_280_x_338_px_1_cd2b3108-c6f2-4ee5-9597-8a501c61f0d6_400x.png?v=1750861662",
-    megaSale:"https://digital-world-2.myshopify.com/cdn/shop/files/Blue_Yellow_Simple_Mega_Sale_Electronic_Instagram_Post_280_x_655_px_1_400x.png?v=1750862046"
-}
 const BigAdBanners = () => {
+    // Lấy sliders từ API
+    const { sliders, loading, error } = useSliders({ 
+        type: 'advertisement',
+        limit: 4 
+    });
+
+    // Loading state
+    if (loading) {
+        return (
+            <div className='w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 my-6 sm:my-8'>
+                <div className='sm:col-span-2 lg:col-span-2 bg-gray-200 animate-pulse rounded-lg h-48 sm:h-64 lg:h-80'></div>
+                <div className='flex flex-col gap-4'>
+                    <div className='bg-gray-200 animate-pulse rounded-lg h-32 sm:h-40 lg:h-48'></div>
+                    <div className='bg-gray-200 animate-pulse rounded-lg h-32 sm:h-40 lg:h-48'></div>
+                </div>
+                <div className='bg-gray-200 animate-pulse rounded-lg h-48 sm:h-64 lg:h-80'></div>
+            </div>
+        );
+    }
+
+    // Error state
+    if (error) {
+        return (
+            <div className='w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 my-6 sm:my-8'>
+                <div className='sm:col-span-2 lg:col-span-2 bg-gray-200 rounded-lg h-48 sm:h-64 lg:h-80 flex items-center justify-center'>
+                    <div className="text-gray-500 text-sm">Failed to load banners</div>
+                </div>
+                <div className='flex flex-col gap-4'>
+                    <div className='bg-gray-200 rounded-lg h-32 sm:h-40 lg:h-48 flex items-center justify-center'>
+                        <div className="text-gray-500 text-xs">Failed</div>
+                    </div>
+                    <div className='bg-gray-200 rounded-lg h-32 sm:h-40 lg:h-48 flex items-center justify-center'>
+                        <div className="text-gray-500 text-xs">Failed</div>
+                    </div>
+                </div>
+                <div className='bg-gray-200 rounded-lg h-48 sm:h-64 lg:h-80 flex items-center justify-center'>
+                    <div className="text-gray-500 text-sm">Failed</div>
+                </div>
+            </div>
+        );
+    }
+
+    // No sliders state
+    if (!sliders || sliders.length === 0) {
+        return (
+            <div className='w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 my-6 sm:my-8'>
+                <div className='sm:col-span-2 lg:col-span-2 bg-gray-200 rounded-lg h-48 sm:h-64 lg:h-80 flex items-center justify-center'>
+                    <div className="text-gray-500 text-sm">No banners available</div>
+                </div>
+                <div className='flex flex-col gap-4'>
+                    <div className='bg-gray-200 rounded-lg h-32 sm:h-40 lg:h-48 flex items-center justify-center'>
+                        <div className="text-gray-500 text-xs">No banners</div>
+                    </div>
+                    <div className='bg-gray-200 rounded-lg h-32 sm:h-40 lg:h-48 flex items-center justify-center'>
+                        <div className="text-gray-500 text-xs">No banners</div>
+                    </div>
+                </div>
+                <div className='bg-gray-200 rounded-lg h-48 sm:h-64 lg:h-80 flex items-center justify-center'>
+                    <div className="text-gray-500 text-sm">No banners</div>
+                </div>
+            </div>
+        );
+    }
+
+    const renderBanner = (slider, className = '') => {
+        const content = (
+            <div className={`relative overflow-hidden rounded-lg group shadow-md hover:shadow-lg transition-shadow duration-300 ${className}`}>
+                <img 
+                    src={slider.image} 
+                    alt={slider.title} 
+                    className='w-full h-full object-cover transition-transform duration-500 group-hover:scale-105' 
+                />
+                <div className='absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300'></div>
+                {/* Overlay with content */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="text-center text-white p-4">
+                        <h3 className="text-lg sm:text-xl font-bold mb-2">
+                            {slider.title}
+                        </h3>
+                        {slider.description && (
+                            <p className="text-sm sm:text-base">
+                                {slider.description}
+                            </p>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+
+        return slider.link ? (
+            <Link to={slider.link} className="block">
+                {content}
+            </Link>
+        ) : content;
+    };
+
     return (
         <div className='w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 my-6 sm:my-8'>
-            {/* Cột 1: Chiếm 2 cột */}
-            <a href="#" className='sm:col-span-2 lg:col-span-2 relative overflow-hidden rounded-lg group shadow-md hover:shadow-lg transition-shadow duration-300'>
-                <img src={banners.electronicSale} alt="Electronic Sale" 
-                     className='w-full h-48 sm:h-64 lg:h-80 object-cover transition-transform duration-500 group-hover:scale-105' />
-                <div className='absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300'></div>
-            </a>
+            {/* Cột 1: Chiếm 2 cột - Banner lớn đầu tiên */}
+            {sliders[0] && renderBanner(sliders[0], 'sm:col-span-2 lg:col-span-2 h-48 sm:h-64 lg:h-80')}
             
             {/* Cột 2: Gồm 2 ảnh xếp dọc */}
             <div className='flex flex-col gap-4'>
-                <a href="#" className='flex-1 relative overflow-hidden rounded-lg group shadow-md hover:shadow-lg transition-shadow duration-300'>
-                    <img src={banners.juiceBlender} alt="Juice Blender" 
-                         className='w-full h-32 sm:h-40 lg:h-48 object-cover transition-transform duration-500 group-hover:scale-105' />
-                    <div className='absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300'></div>
-                </a>
-                <a href="#" className='flex-1 relative overflow-hidden rounded-lg group shadow-md hover:shadow-lg transition-shadow duration-300'>
-                    <img src={banners.cookwareSet} alt="Cookware Set" 
-                         className='w-full h-32 sm:h-40 lg:h-48 object-cover transition-transform duration-500 group-hover:scale-105' />
-                    <div className='absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300'></div>
-                </a>
+                {sliders[1] && renderBanner(sliders[1], 'flex-1 h-32 sm:h-40 lg:h-48')}
+                {sliders[2] && renderBanner(sliders[2], 'flex-1 h-32 sm:h-40 lg:h-48')}
             </div>
 
-            {/* Cột 3: Chiếm 1 cột */}
-            <a href="#" className='relative overflow-hidden rounded-lg group shadow-md hover:shadow-lg transition-shadow duration-300'>
-                <img src={banners.megaSale} alt="Mega Sale" 
-                     className='w-full h-48 sm:h-64 lg:h-80 object-cover transition-transform duration-500 group-hover:scale-105' />
-                <div className='absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300'></div>
-            </a>
+            {/* Cột 3: Chiếm 1 cột - Banner lớn cuối cùng */}
+            {sliders[3] && renderBanner(sliders[3], 'h-48 sm:h-64 lg:h-80')}
         </div>
     );
 };
