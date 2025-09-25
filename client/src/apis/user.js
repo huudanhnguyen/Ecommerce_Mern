@@ -67,3 +67,29 @@ export const apiRemoveFromWishlist = (productId) =>
 // ✅ Toggle wishlist (add/remove)
 export const apiToggleWishlist = (productId) =>
   axios.post("/user/toggle-wishlist", { productId });
+
+// ================== ADMIN USER MANAGEMENT ==================
+
+// Lấy tất cả users (admin only)
+export const getAllUsers = (params = {}) => 
+  axios.get("/user/admin/users", { params });
+
+// Lấy user theo ID (admin only)
+export const getUserById = (userId) => 
+  axios.get(`/user/admin/${userId}`);
+
+// Tạo user mới (admin only)
+export const createUser = (userData) => 
+  axios.post("/user/admin/create", userData);
+
+// Cập nhật user (admin only)
+export const updateUser = (userId, userData) => 
+  axios.put(`/user/admin/${userId}`, userData);
+
+// Xóa user (admin only)
+export const deleteUser = (userId) => 
+  axios.delete(`/user/admin/${userId}`);
+
+// Block/Unblock user (admin only)
+export const toggleBlockUser = (userId) => 
+  axios.put(`/user/admin/${userId}/toggle-block`);

@@ -13,6 +13,7 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  FileText,
 } from "lucide-react";
 
 const AdminLayout = () => {
@@ -30,6 +31,7 @@ const AdminLayout = () => {
     { to: "/admin/dashboard", label: "Dashboard", icon: <LayoutDashboard size={18} /> },
     { to: "/admin/users", label: "Users", icon: <Users size={18} /> },
     { to: "/admin/products", label: "Products", icon: <Package size={18} /> },
+    { to: "/admin/blogs", label: "Blogs", icon: <FileText size={18} /> },
     { to: "/admin/settings", label: "Settings", icon: <Settings size={18} /> },
     { to: "/admin/analytics", label: "Analytics", icon: <BarChart3 size={18} /> },
   ];

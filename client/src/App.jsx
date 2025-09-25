@@ -26,7 +26,9 @@ import ContactUs from "./pages/public/ContactUs";
 
 // import các page admin
 import Dashboard from "./pages/private/Dashboard";
-import Users from "./pages/private/Users";
+import Users from "./pages/private/Users/UserList";
+import UserCreate from "./pages/private/Users/UserCreate";
+import UserEdit from "./pages/private/Users/UserEdit";
 import ProductsAdmin from "./pages/private/Products/ProductList";
 import Settings from "./pages/private/Settings";
 import Analytics from "./pages/private/Analytics";
@@ -34,6 +36,9 @@ import AdminLayout from "./pages/private/AdminLayout";
 import ProductCreate from "./pages/private/Products/ProductCreate";
 import ProductEdit from "./pages/private/Products/ProductEdit";
 import ProductList from "./pages/private/Products/ProductList";
+import BlogsAdmin from "./pages/private/Blogs/BlogList";
+import BlogCreate from "./pages/private/Blogs/BlogCreate";
+import BlogEdit from "./pages/private/Blogs/BlogEdit";
 
 // import route bảo vệ admin
 import AdminRoute from "./components/Admin/AdminRoute";
@@ -79,12 +84,17 @@ function App() {
         <Route path="/admin" element={<AdminLayout />}>
           <Route path={path.ADMIN_DASHBOARD} element={<Dashboard />} />
           <Route path={path.ADMIN_USERS} element={<Users />} />
+          <Route path={path.ADMIN_USERS_CREATE} element={<UserCreate />} />
+          <Route path={path.ADMIN_USERS_EDIT__ID} element={<UserEdit />} />
           <Route path={path.ADMIN_PRODUCTS} element={<ProductsAdmin />} />
           <Route path={path.ADMIN_SETTINGS} element={<Settings />} />
           <Route path={path.ADMIN_ANALYTICS} element={<Analytics />} />
           <Route path={path.ADMIN_PRODUCTS_CREATE} element={<ProductCreate />} />
           <Route path={path.ADMIN_PRODUCTS_EDIT__ID} element={<ProductEdit />} />
           <Route path={path.ADMIN_PRODUCTS_LIST} element={<ProductList />} />
+          <Route path="/admin/blogs" element={<BlogsAdmin />} />
+          <Route path="/admin/blogs/create" element={<BlogCreate />} />
+          <Route path="/admin/blogs/edit/:id" element={<BlogEdit />} />
         </Route>
       </Route>
     </Routes>

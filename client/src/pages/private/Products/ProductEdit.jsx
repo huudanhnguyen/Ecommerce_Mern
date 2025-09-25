@@ -3,10 +3,16 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import ProductForm from "../../../components/Admin/ProductForm";
 import axios from "../../../axios";
+import { buildFormData } from "../../../utils/buildFormData";
 
-// Hàm chuẩn hóa dữ liệu từ backend -> form
+// Chuẩn hóa dữ liệu từ backend -> form
 const normalizeProductData = (data) => {
   if (!data) return null;
+
+  // Chuẩn hóa danh sách ảnh: có case API trả về dạng [[url1,url2,...]]
+  const normalizedImages = Array.isArray(data.images)
+    ? (Array.isArray(data.images[0]) ? data.images[0] : data.images)
+    : [];
 
   return {
     ...data,
@@ -14,7 +20,7 @@ const normalizeProductData = (data) => {
     slug: data.slug || "",
     brand: data.brand || "",
     price: data.price || 0,
-    quantity: data.countInStock ?? data.quantity ?? 0, // ✅ map countInStock
+    quantity: data.quantity ?? data.quantity ?? 0,
 
     description: Array.isArray(data.description)
       ? data.description.join("\n")
@@ -36,7 +42,9 @@ const normalizeProductData = (data) => {
     isActive: data.isActive ?? true,
 
     thumb: data.thumb || "",
-    images: Array.isArray(data.images) ? data.images : [],
+    images: normalizedImages,
+
+    // ✅ luôn dùng _id thay vì name
     category: data.category?._id || data.category || "",
   };
 };
@@ -45,6 +53,7 @@ const ProductEdit = () => {
   const { id } = useParams();
   const [initialData, setInitialData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   // Load product by id
   useEffect(() => {
@@ -54,7 +63,7 @@ const ProductEdit = () => {
         const res = await axios.get(`/product/${id}`);
         console.log("✅ Raw product data:", res.data);
 
-        const product = res.data.productData || res.data; // ✅ fix key
+        const product = res.data.productData || res.data;
         setInitialData(normalizeProductData(product));
       } catch (err) {
         console.error("❌ Error loading product:", err);
@@ -72,36 +81,8 @@ const ProductEdit = () => {
   // Submit update product
   const handleSubmit = async (values) => {
     try {
-      const formData = new FormData();
-
-      // append cơ bản
-      formData.append("title", values.title);
-      formData.append("slug", values.slug);
-      formData.append("price", values.price);
-      formData.append("brand", values.brand);
-      formData.append("description", values.description);
-      formData.append("category", values.category);
-      formData.append("quantity", values.quantity);
-      formData.append("instock", values.instock);
-      formData.append("isActive", values.isActive);
-
-      // object / array
-      formData.append("infomations", JSON.stringify(values.infomations));
-      formData.append("variants", JSON.stringify(values.variants));
-
-      // thumb
-      if (values.thumb instanceof File) {
-        formData.append("thumb", values.thumb);
-      }
-
-      // images
-      if (values.images && values.images.length > 0) {
-        values.images.forEach((file) => {
-          if (file instanceof File) {
-            formData.append("images", file);
-          }
-        });
-      }
+      setSubmitting(true);
+      const formData = buildFormData(values);
 
       const res = await axios.put(`/product/${id}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -114,15 +95,32 @@ const ProductEdit = () => {
       }
     } catch (err) {
       console.error("❌ Error updating product:", err);
-      alert("Error updating product!");
+      if (err.response?.data) {
+        console.error("📌 Server response body:", err.response.data);
+        alert(`Error: ${err.response.data.message || "Update failed!"}`);
+      } else {
+        alert("Error updating product!");
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  if (loading) return <p className="p-6">⏳ Loading...</p>;
+  if (loading) return <p className="p-6">⏳ Loading product...</p>;
 
   return (
     <div className="p-6">
-      <ProductForm initialData={initialData} onSubmit={handleSubmit} />
+      {submitting && (
+        <div className="mb-4 text-blue-600 font-medium">
+          ⏳ Đang cập nhật sản phẩm, vui lòng đợi...
+        </div>
+      )}
+
+      <ProductForm
+        initialData={initialData}
+        onSubmit={handleSubmit}
+        loading={submitting}
+      />
     </div>
   );
 };

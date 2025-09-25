@@ -29,6 +29,8 @@ const path = {
   // ===== ADMIN =====
   ADMIN_DASHBOARD: "/admin/dashboard",
   ADMIN_USERS: "/admin/users",
+  ADMIN_USERS_CREATE: "/admin/users/create",
+  ADMIN_USERS_EDIT__ID: "/admin/users/edit/:id",
   ADMIN_PRODUCTS: "/admin/products",
   ADMIN_SETTINGS: "/admin/settings",
   ADMIN_ANALYTICS: "/admin/analytics",

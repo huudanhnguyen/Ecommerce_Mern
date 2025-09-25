@@ -128,28 +128,34 @@ const ProductList = () => {
         <div className="flex flex-wrap gap-2">
           <Link
             to="/admin/products/create"
-            className="flex items-center gap-2 px-3 py-2 bg-main text-white rounded-lg hover:bg-blue-700 transition text-sm"
+            className="flex items-center gap-2 px-3 py-2 bg-main text-white rounded-lg hover:bg-blue-700 transition text-sm flex-1 min-w-0 justify-center"
           >
-            <Plus size={16} /> Add Product
+            <Plus size={16} /> 
+            <span className="hidden sm:inline">Add Product</span>
+            <span className="sm:hidden">Add</span>
           </Link>
-          <button className="flex items-center gap-2 px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-sm">
-            <Upload size={16} /> Import
+          <button className="flex items-center gap-2 px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-sm flex-1 min-w-0 justify-center">
+            <Upload size={16} /> 
+            <span className="hidden sm:inline">Import</span>
           </button>
-          <button className="flex items-center gap-2 px-3 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition text-sm">
-            <Download size={16} /> Export
+          <button className="flex items-center gap-2 px-3 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition text-sm flex-1 min-w-0 justify-center">
+            <Download size={16} /> 
+            <span className="hidden sm:inline">Export</span>
           </button>
           <button
             onClick={handleDeleteSelected}
-            className="flex items-center gap-2 px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm"
+            className="flex items-center gap-2 px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm flex-1 min-w-0 justify-center"
           >
-            <Trash2 size={16} /> Delete Selected
+            <Trash2 size={16} /> 
+            <span className="hidden sm:inline">Delete Selected</span>
+            <span className="sm:hidden">Delete</span>
           </button>
         </div>
       </div>
 
       {/* Search + Filter */}
-      <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
-        <div className="relative w-full md:w-1/3">
+      <div className="flex flex-col gap-4">
+        <div className="relative w-full">
           <Search className="absolute top-2.5 left-3 text-gray-400" size={18} />
           <input
             type="text"
@@ -164,7 +170,7 @@ const ProductList = () => {
           <select
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
-            className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-main text-sm"
+            className="flex-1 min-w-0 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-main text-sm"
           >
             <option value="All">All Categories</option>
             {categories.map((c) => (
@@ -177,30 +183,50 @@ const ProductList = () => {
       </div>
 
       {/* Table - Desktop */}
-      <div className="hidden md:block bg-white p-6 rounded-lg shadow overflow-x-auto">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-gray-100 text-gray-600 text-sm">
-              <th className="p-3">
-                <input
-                  type="checkbox"
-                  onChange={toggleSelectAll}
-                  checked={
-                    paginatedProducts.length > 0 &&
-                    paginatedProducts.every((p) => selectedProducts.includes(p._id))
-                  }
-                />
-              </th>
-              <th className="p-3 text-left">Thumbnail</th>
-              <th className="p-3 text-left">Product Name</th>
-              <th className="p-3 text-left">Category</th>
-              <th className="p-3 text-left">Price</th>
-              <th className="p-3 text-left">Stock</th>
-              <th className="p-3 text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedProducts.map((p) => (
+      <div className="hidden md:block bg-white rounded-lg shadow overflow-x-auto">
+        {paginatedProducts.length === 0 ? (
+          <div className="p-8 text-center">
+            <Package className="mx-auto text-gray-400 mb-4" size={48} />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
+            <p className="text-gray-500 mb-4">
+              {search || filterCategory !== "All" 
+                ? "Try adjusting your search or filter criteria"
+                : "Get started by creating your first product"
+              }
+            </p>
+            {!search && filterCategory === "All" && (
+              <Link
+                to="/admin/products/create"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-main text-white rounded-lg hover:bg-blue-700 transition"
+              >
+                <Plus size={16} /> Create Product
+              </Link>
+            )}
+          </div>
+        ) : (
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-gray-100 text-gray-600 text-sm">
+                <th className="p-3">
+                  <input
+                    type="checkbox"
+                    onChange={toggleSelectAll}
+                    checked={
+                      paginatedProducts.length > 0 &&
+                      paginatedProducts.every((p) => selectedProducts.includes(p._id))
+                    }
+                  />
+                </th>
+                <th className="p-3 text-left">Thumbnail</th>
+                <th className="p-3 text-left">Product Name</th>
+                <th className="p-3 text-left">Category</th>
+                <th className="p-3 text-left">Price</th>
+                <th className="p-3 text-left">Stock</th>
+                <th className="p-3 text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedProducts.map((p) => (
               <tr key={p._id} className="border-b hover:bg-gray-50 text-sm">
                 <td className="p-3 text-center">
                   <input
@@ -237,13 +263,100 @@ const ProductList = () => {
                   </button>
                 </td>
               </tr>
-            ))}
-          </tbody>
-        </table>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {/* Mobile Cards */}
+      <div className="md:hidden space-y-4">
+        {paginatedProducts.length === 0 ? (
+          <div className="bg-white p-8 rounded-lg shadow text-center">
+            <Package className="mx-auto text-gray-400 mb-4" size={48} />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
+            <p className="text-gray-500 mb-4">
+              {search || filterCategory !== "All" 
+                ? "Try adjusting your search or filter criteria"
+                : "Get started by creating your first product"
+              }
+            </p>
+            {!search && filterCategory === "All" && (
+              <Link
+                to="/admin/products/create"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-main text-white rounded-lg hover:bg-blue-700 transition"
+              >
+                <Plus size={16} /> Create Product
+              </Link>
+            )}
+          </div>
+        ) : (
+          paginatedProducts.map((p) => (
+          <div key={p._id} className="bg-white p-4 rounded-lg shadow">
+            <div className="flex items-start gap-3 mb-3">
+              <input
+                type="checkbox"
+                checked={selectedProducts.includes(p._id)}
+                onChange={() => toggleSelect(p._id)}
+                className="mt-1"
+              />
+              <img
+                src={p.thumb || "/no-image.png"}
+                alt={p.title}
+                className="w-20 h-20 object-cover rounded flex-shrink-0"
+              />
+              <div className="flex-1 min-w-0">
+                <h3 className="font-medium text-sm mb-1 line-clamp-2">{p.title}</h3>
+                <p className="text-xs text-gray-500 mb-1">{p.category?.title || "—"}</p>
+                <p className="text-sm text-red-600 font-semibold mb-2">
+                  {formatPrice(p.price)}
+                </p>
+                <div className="flex flex-wrap gap-1 mb-2">
+                  <span className="text-xs text-gray-500">Stock: {p.quantity}</span>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs ${
+                      p.inStock
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                    }`}
+                  >
+                    {p.inStock ? "In Stock" : "Out of Stock"}
+                  </span>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs ${
+                      p.isActive
+                        ? "bg-blue-100 text-blue-800"
+                        : "bg-gray-100 text-gray-800"
+                    }`}
+                  >
+                    {p.isActive ? "Active" : "Inactive"}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-2 border-t">
+              <Link
+                to={`/admin/products/edit/${p._id}`}
+                className="flex items-center gap-1 px-3 py-2 text-blue-600 hover:bg-blue-50 rounded text-sm"
+              >
+                <Edit size={14} />
+                Edit
+              </Link>
+              <button
+                onClick={() => handleDelete(p._id)}
+                className="flex items-center gap-1 px-3 py-2 text-red-600 hover:bg-red-50 rounded text-sm"
+              >
+                <Trash2 size={14} />
+                Delete
+              </button>
+            </div>
+          </div>
+          ))
+        )}
       </div>
 
       {/* Pagination */}
-      <div className="flex justify-between items-center mt-4">
+      <div className="flex flex-col sm:flex-row justify-between items-center mt-4 gap-4">
         <p className="text-sm text-gray-500">
           Page {currentPage} / {totalPages || 1}
         </p>
@@ -251,14 +364,14 @@ const ProductList = () => {
           <button
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            className="p-2 border rounded-lg disabled:opacity-50"
+            className="p-2 border rounded-lg disabled:opacity-50 hover:bg-gray-50"
           >
             <ChevronLeft size={16} />
           </button>
           <button
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
-            className="p-2 border rounded-lg disabled:opacity-50"
+            className="p-2 border rounded-lg disabled:opacity-50 hover:bg-gray-50"
           >
             <ChevronRight size={16} />
           </button>
