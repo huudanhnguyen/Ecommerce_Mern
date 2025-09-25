@@ -15,8 +15,18 @@ import {
 const Home = () => {
   return (
     <>
+      {/* Banner chính - Full width */}
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 lg:mt-6">
+        <Banner />
+      </div>
+
+      {/* Ad Banners - Full width */}
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 lg:mt-6">
+        <AdBanners />
+      </div>
+
       {/* Main Content - Responsive Layout */}
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 lg:mt-12">
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 relative">
           {/* Sidebar - Hidden on mobile, visible on desktop */}
           <div className="hidden lg:block w-full lg:w-[25%] flex flex-col gap-4">
@@ -26,9 +36,7 @@ const Home = () => {
           
           {/* Main Content */}
           <div className="w-full lg:w-[75%] flex flex-col gap-4 lg:gap-6">
-            <Banner />
             <BestSeller />
-            <AdBanners />
           </div>
         </div>
       </div>
