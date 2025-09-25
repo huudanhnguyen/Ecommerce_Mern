@@ -35,7 +35,17 @@ const createProductCategory = asyncHandler(async (req, res) => {
 // @access  Public
 const getProductCategories = asyncHandler(async (req, res) => {
   const categories = await ProductCategory.find({});
-    res.status(200).json(categories);
+  res.status(200).json(categories);
+});
+
+const getProductCategoryById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const category = await ProductCategory.findById(id);
+  if (!category) {
+    res.status(404);
+    throw new Error('Category not found');
+  }
+  res.status(200).json(category);
 });
 // @desc    Update a product category
 // @route   PUT /api/product-categories/:id
@@ -81,6 +91,7 @@ const deleteProductCategory = asyncHandler(async (req, res) => {
 module.exports = {
   createProductCategory,
   getProductCategories,
+  getProductCategoryById,
   updateProductCategory,
   deleteProductCategory,
 };

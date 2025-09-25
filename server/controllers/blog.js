@@ -162,12 +162,31 @@ const updateBlog = asyncHandler(async (req, res) => {
     }
 });
 const deleteBlog = asyncHandler(async (req, res) => {
-    const blog = await Blog.findByIdAndDelete(req.params.id);
+    const { id } = req.params;
+    const blog = await Blog.findById(id);
     if (!blog) {
         res.status(404);
         throw new Error('Blog not found');
     }
-    res.status(200).json({ message: 'Blog removed successfully', deletedBlog: blog });
+
+    // Xóa ảnh từ Cloudinary trước khi xóa blog
+    if (blog.images && blog.images.length > 0) {
+        const publicIds = blog.images.map(img => img.public_id);
+        try {
+            await cloudinary.api.delete_resources(publicIds);
+        } catch (error) {
+            console.error('Error deleting images from Cloudinary:', error);
+        }
+    }
+
+    // Xóa blog từ database
+    await Blog.findByIdAndDelete(id);
+    
+    res.status(200).json({ 
+        success: true,
+        message: 'Blog removed successfully', 
+        deletedBlog: blog 
+    });
 });
 // likeBlog and dislikeBlog
 const likeBlog = asyncHandler(async (req, res) => {

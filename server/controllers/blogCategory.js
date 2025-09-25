@@ -31,7 +31,17 @@ const createBlogCategory = asyncHandler(async (req, res) => {
 });
 const getBlogCategories = asyncHandler(async (req, res) => {
   const categories = await BlogCategory.find({});
-    res.status(200).json(categories);
+  res.status(200).json(categories);
+});
+
+const getBlogCategoryById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const category = await BlogCategory.findById(id);
+  if (!category) {
+    res.status(404);
+    throw new Error('Category not found');
+  }
+  res.status(200).json(category);
 });
 const updateBlogCategory = asyncHandler(async (req, res) => {
   const { id } = req.params;
@@ -74,6 +84,7 @@ const deleteBlogCategory = asyncHandler(async (req, res) => {
 module.exports = {
   createBlogCategory,
   getBlogCategories,
+  getBlogCategoryById,
   updateBlogCategory,
   deleteBlogCategory,
 };
