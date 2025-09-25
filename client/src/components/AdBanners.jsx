@@ -16,7 +16,7 @@ const AdBanners = () => {
         return (
             <div className='w-full grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5'>
                 {[1, 2].map((i) => (
-                    <div key={i} className='bg-gray-200 animate-pulse rounded-lg h-32 sm:h-40 lg:h-48'></div>
+                    <div key={i} className='bg-gray-200 animate-pulse rounded-lg h-40 sm:h-48 lg:h-56'></div>
                 ))}
             </div>
         );
@@ -26,10 +26,10 @@ const AdBanners = () => {
     if (error) {
         return (
             <div className='w-full grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5'>
-                <div className='bg-gray-200 rounded-lg h-32 sm:h-40 lg:h-48 flex items-center justify-center'>
+                <div className='bg-gray-200 rounded-lg h-40 sm:h-48 lg:h-56 flex items-center justify-center'>
                     <div className="text-gray-500 text-sm">Failed to load banners</div>
                 </div>
-                <div className='bg-gray-200 rounded-lg h-32 sm:h-40 lg:h-48 flex items-center justify-center'>
+                <div className='bg-gray-200 rounded-lg h-40 sm:h-48 lg:h-56 flex items-center justify-center'>
                     <div className="text-gray-500 text-sm">Failed to load banners</div>
                 </div>
             </div>
@@ -40,10 +40,10 @@ const AdBanners = () => {
     if (!sliders || sliders.length === 0) {
         return (
             <div className='w-full grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5'>
-                <div className='bg-gray-200 rounded-lg h-32 sm:h-40 lg:h-48 flex items-center justify-center'>
+                <div className='bg-gray-200 rounded-lg h-40 sm:h-48 lg:h-56 flex items-center justify-center'>
                     <div className="text-gray-500 text-sm">No banners available</div>
                 </div>
-                <div className='bg-gray-200 rounded-lg h-32 sm:h-40 lg:h-48 flex items-center justify-center'>
+                <div className='bg-gray-200 rounded-lg h-40 sm:h-48 lg:h-56 flex items-center justify-center'>
                     <div className="text-gray-500 text-sm">No banners available</div>
                 </div>
             </div>
@@ -63,7 +63,7 @@ const AdBanners = () => {
                                 <img 
                                     src={slider.image} 
                                     alt={slider.title} 
-                                    className='w-full h-32 sm:h-40 lg:h-48 object-cover group-hover:scale-105 transition-transform duration-300'
+                                    className='w-full h-40 sm:h-48 lg:h-56 object-cover group-hover:scale-105 transition-transform duration-300'
                                 />
                                 {/* Overlay with content */}
                                 <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -86,7 +86,7 @@ const AdBanners = () => {
                                 <img 
                                     src={slider.image} 
                                     alt={slider.title} 
-                                    className='w-full h-32 sm:h-40 lg:h-48 object-cover group-hover:scale-105 transition-transform duration-300'
+                                    className='w-full h-40 sm:h-48 lg:h-56 object-cover group-hover:scale-105 transition-transform duration-300'
                                 />
                                 {/* Overlay with content */}
                                 <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">

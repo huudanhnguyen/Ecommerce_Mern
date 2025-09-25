@@ -15,12 +15,12 @@ const BigAdBanners = () => {
     if (loading) {
         return (
             <div className='w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 my-6 sm:my-8'>
-                <div className='sm:col-span-2 lg:col-span-2 bg-gray-200 animate-pulse rounded-lg h-48 sm:h-64 lg:h-80'></div>
+                <div className='sm:col-span-2 lg:col-span-2 bg-gray-200 animate-pulse rounded-lg h-40 sm:h-56 lg:h-72'></div>
                 <div className='flex flex-col gap-4'>
-                    <div className='bg-gray-200 animate-pulse rounded-lg h-32 sm:h-40 lg:h-48'></div>
-                    <div className='bg-gray-200 animate-pulse rounded-lg h-32 sm:h-40 lg:h-48'></div>
+                    <div className='bg-gray-200 animate-pulse rounded-lg h-36 sm:h-44 lg:h-52'></div>
+                    <div className='bg-gray-200 animate-pulse rounded-lg h-36 sm:h-44 lg:h-52'></div>
                 </div>
-                <div className='bg-gray-200 animate-pulse rounded-lg h-48 sm:h-64 lg:h-80'></div>
+                <div className='bg-gray-200 animate-pulse rounded-lg h-40 sm:h-56 lg:h-72'></div>
             </div>
         );
     }
@@ -29,18 +29,18 @@ const BigAdBanners = () => {
     if (error) {
         return (
             <div className='w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 my-6 sm:my-8'>
-                <div className='sm:col-span-2 lg:col-span-2 bg-gray-200 rounded-lg h-48 sm:h-64 lg:h-80 flex items-center justify-center'>
+                <div className='sm:col-span-2 lg:col-span-2 bg-gray-200 rounded-lg h-40 sm:h-56 lg:h-72 flex items-center justify-center'>
                     <div className="text-gray-500 text-sm">Failed to load banners</div>
                 </div>
                 <div className='flex flex-col gap-4'>
-                    <div className='bg-gray-200 rounded-lg h-32 sm:h-40 lg:h-48 flex items-center justify-center'>
+                    <div className='bg-gray-200 rounded-lg h-36 sm:h-44 lg:h-52 flex items-center justify-center'>
                         <div className="text-gray-500 text-xs">Failed</div>
                     </div>
-                    <div className='bg-gray-200 rounded-lg h-32 sm:h-40 lg:h-48 flex items-center justify-center'>
+                    <div className='bg-gray-200 rounded-lg h-36 sm:h-44 lg:h-52 flex items-center justify-center'>
                         <div className="text-gray-500 text-xs">Failed</div>
                     </div>
                 </div>
-                <div className='bg-gray-200 rounded-lg h-48 sm:h-64 lg:h-80 flex items-center justify-center'>
+                <div className='bg-gray-200 rounded-lg h-40 sm:h-56 lg:h-72 flex items-center justify-center'>
                     <div className="text-gray-500 text-sm">Failed</div>
                 </div>
             </div>
@@ -49,20 +49,20 @@ const BigAdBanners = () => {
 
     // No sliders state
     if (!sliders || sliders.length === 0) {
-        return (
+    return (
             <div className='w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 my-6 sm:my-8'>
-                <div className='sm:col-span-2 lg:col-span-2 bg-gray-200 rounded-lg h-48 sm:h-64 lg:h-80 flex items-center justify-center'>
+                <div className='sm:col-span-2 lg:col-span-2 bg-gray-200 rounded-lg h-40 sm:h-56 lg:h-72 flex items-center justify-center'>
                     <div className="text-gray-500 text-sm">No banners available</div>
                 </div>
                 <div className='flex flex-col gap-4'>
-                    <div className='bg-gray-200 rounded-lg h-32 sm:h-40 lg:h-48 flex items-center justify-center'>
+                    <div className='bg-gray-200 rounded-lg h-36 sm:h-44 lg:h-52 flex items-center justify-center'>
                         <div className="text-gray-500 text-xs">No banners</div>
                     </div>
-                    <div className='bg-gray-200 rounded-lg h-32 sm:h-40 lg:h-48 flex items-center justify-center'>
+                    <div className='bg-gray-200 rounded-lg h-36 sm:h-44 lg:h-52 flex items-center justify-center'>
                         <div className="text-gray-500 text-xs">No banners</div>
                     </div>
                 </div>
-                <div className='bg-gray-200 rounded-lg h-48 sm:h-64 lg:h-80 flex items-center justify-center'>
+                <div className='bg-gray-200 rounded-lg h-40 sm:h-56 lg:h-72 flex items-center justify-center'>
                     <div className="text-gray-500 text-sm">No banners</div>
                 </div>
             </div>
@@ -104,16 +104,16 @@ const BigAdBanners = () => {
     return (
         <div className='w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 my-6 sm:my-8'>
             {/* Cột 1: Chiếm 2 cột - Banner lớn đầu tiên */}
-            {sliders[0] && renderBanner(sliders[0], 'sm:col-span-2 lg:col-span-2 h-48 sm:h-64 lg:h-80')}
+            {sliders[0] && renderBanner(sliders[0], 'sm:col-span-2 lg:col-span-2 h-40 sm:h-56 lg:h-72')}
             
             {/* Cột 2: Gồm 2 ảnh xếp dọc */}
             <div className='flex flex-col gap-4'>
-                {sliders[1] && renderBanner(sliders[1], 'flex-1 h-32 sm:h-40 lg:h-48')}
-                {sliders[2] && renderBanner(sliders[2], 'flex-1 h-32 sm:h-40 lg:h-48')}
+                {sliders[1] && renderBanner(sliders[1], 'flex-1 h-36 sm:h-44 lg:h-52')}
+                {sliders[2] && renderBanner(sliders[2], 'flex-1 h-36 sm:h-44 lg:h-52')}
             </div>
 
             {/* Cột 3: Chiếm 1 cột - Banner lớn cuối cùng */}
-            {sliders[3] && renderBanner(sliders[3], 'h-48 sm:h-64 lg:h-80')}
+            {sliders[3] && renderBanner(sliders[3], 'h-40 sm:h-56 lg:h-72')}
         </div>
     );
 };

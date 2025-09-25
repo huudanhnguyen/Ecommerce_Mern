@@ -38,7 +38,7 @@ const Banner = () => {
     if (loading) {
         return (
             <div className='w-full relative custom-banner-slick rounded-lg overflow-hidden shadow-lg'>
-                <div className='w-full h-[250px] sm:h-[350px] lg:h-[395px] bg-gray-200 animate-pulse flex items-center justify-center'>
+                <div className='w-full h-[200px] sm:h-[280px] lg:h-[320px] bg-gray-200 animate-pulse flex items-center justify-center'>
                     <div className="text-gray-500">Loading banners...</div>
                 </div>
             </div>
@@ -49,7 +49,7 @@ const Banner = () => {
     if (error) {
         return (
             <div className='w-full relative custom-banner-slick rounded-lg overflow-hidden shadow-lg'>
-                <div className='w-full h-[250px] sm:h-[350px] lg:h-[395px] bg-gray-200 flex items-center justify-center'>
+                <div className='w-full h-[200px] sm:h-[280px] lg:h-[320px] bg-gray-200 flex items-center justify-center'>
                     <div className="text-gray-500">Failed to load banners</div>
                 </div>
             </div>
@@ -60,7 +60,7 @@ const Banner = () => {
     if (!sliders || sliders.length === 0) {
         return (
             <div className='w-full relative custom-banner-slick rounded-lg overflow-hidden shadow-lg'>
-                <div className='w-full h-[250px] sm:h-[350px] lg:h-[395px] bg-gray-200 flex items-center justify-center'>
+                <div className='w-full h-[200px] sm:h-[280px] lg:h-[320px] bg-gray-200 flex items-center justify-center'>
                     <div className="text-gray-500">No banners available</div>
                 </div>
             </div>
@@ -78,7 +78,7 @@ const Banner = () => {
                                     <img 
                                         src={slider.image} 
                                         alt={slider.title} 
-                                        className='w-full h-[250px] sm:h-[350px] lg:h-[395px] object-cover group-hover:scale-105 transition-transform duration-500'
+                                        className='w-full h-[200px] sm:h-[280px] lg:h-[320px] object-cover group-hover:scale-105 transition-transform duration-500'
                                     />
                                     {/* Overlay with content */}
                                     <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
@@ -105,7 +105,7 @@ const Banner = () => {
                                 <img 
                                     src={slider.image} 
                                     alt={slider.title} 
-                                    className='w-full h-[250px] sm:h-[350px] lg:h-[395px] object-cover'
+                                    className='w-full h-[200px] sm:h-[280px] lg:h-[320px] object-cover'
                                 />
                                 {/* Overlay with content */}
                                 <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
