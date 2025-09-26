@@ -1,6 +1,6 @@
 // src/store/userSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { apiLogin } from "../apis/user";
+import { apiLogin } from "../services/user";
 
 // --- HÀM ĐỌC TỪ LOCALSTORAGE ---
 const getInitialState = () => {
@@ -64,6 +64,12 @@ export const userSlice = createSlice({
       state.token = null;
       state.error = null;
     },
+    setUser: (state, action) => {
+      state.currentUser = action.payload;
+      if (action.payload) {
+        localStorage.setItem("currentUser", JSON.stringify(action.payload));
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -102,5 +108,5 @@ export const userSlice = createSlice({
   },
 });
 
-export const { logout } = userSlice.actions;
+export const { logout, setUser } = userSlice.actions;
 export default userSlice.reducer;

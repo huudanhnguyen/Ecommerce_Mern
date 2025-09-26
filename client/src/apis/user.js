@@ -1,30 +1,64 @@
-// src/apis/user.js
-import axios from "../axios"; // Axios instance đã cấu hình interceptor
+import axios from '../axios';
 
-// ================== AUTH ==================
+// Lấy thông tin user hiện tại
+export const getCurrentUser = () => axios({
+  url: '/user/current',
+  method: 'get'
+});
 
-// Đăng nhập
-export const apiLogin = (data) =>
-  axios.post("/user/login", data);
+// Cập nhật thông tin user
+export const updateUserProfile = (data) => axios({
+  url: '/user/update-profile',
+  method: 'put',
+  data
+});
 
-// Đăng ký
-export const apiRegister = (data) =>
-  axios.post("/user/register", data);
+// Đổi mật khẩu
+export const changePassword = (data) => axios({
+  url: '/user/change-password',
+  method: 'put',
+  data
+});
 
-// Xác minh email
-export const apiVerifyEmail = (token) =>
-  axios.get(`/user/finalRegister/${token}`);
+// Upload avatar
+export const uploadAvatar = (data) => axios({
+  url: '/user/upload-avatar',
+  method: 'post',
+  data
+});
 
-// Quên mật khẩu
-export const apiForgotPassword = (email) =>
-  axios.get(`/user/forgot-password?email=${email}`);
+// Lấy lịch sử đơn hàng
+export const getUserOrders = (params) => axios({
+  url: '/user/orders',
+  method: 'get',
+  params
+});
 
-// Reset mật khẩu
-export const apiResetPassword = (token, password) =>
-  axios.put(`/user/reset-password/${token}`, { password });
+// Lấy thông tin đơn hàng chi tiết
+export const getOrderById = (id) => axios({
+  url: `/user/orders/${id}`,
+  method: 'get'
+});
 
-// ================== CART ==================
+// Wishlist APIs
+export const apiGetWishlist = () => axios({
+  url: '/user/wishlist',
+  method: 'get'
+});
 
+export const apiAddToWishlist = (productId) => axios({
+  url: '/user/wishlist/add',
+  method: 'post',
+  data: { productId }
+});
+
+export const apiRemoveFromWishlist = (productId) => axios({
+  url: '/user/wishlist',
+  method: 'delete',
+  data: { productId }
+});
+
+// Cart APIs
 // Lấy giỏ hàng của user
 export const apiGetCart = () => axios.get("/user/cart");
 
@@ -51,45 +85,58 @@ export const apiRemoveFromCart = ({ productId, variants = {} }) => {
   return axios.delete("/user/cart", { data: { productId, variants } });
 };
 
-// ================== WISHLIST ==================
+// ================== AUTH ==================
 
-// Lấy danh sách yêu thích
-export const apiGetWishlist = () => axios.get("/user/wishlist");
+// Đăng nhập
+export const apiLogin = (data) =>
+  axios.post("/user/login", data);
 
-// Thêm sản phẩm vào wishlist
-export const apiAddToWishlist = (productId) =>
-  axios.post("/user/wishlist", { productId });
+// Đăng ký
+export const apiRegister = (data) =>
+  axios.post("/user/register", data);
 
-// Xóa sản phẩm khỏi wishlist
-export const apiRemoveFromWishlist = (productId) =>
-  axios.delete("/user/wishlist", { data: { productId } });
+// Xác minh email
+export const apiVerifyEmail = (token) =>
+  axios.get(`/user/finalRegister/${token}`);
 
-// ✅ Toggle wishlist (add/remove)
-export const apiToggleWishlist = (productId) =>
-  axios.post("/user/toggle-wishlist", { productId });
+// Quên mật khẩu
+export const apiForgotPassword = (email) =>
+  axios.get(`/user/forgot-password?email=${email}`);
 
-// ================== ADMIN USER MANAGEMENT ==================
+// Reset mật khẩu
+export const apiResetPassword = (token, password) =>
+  axios.put(`/user/reset-password/${token}`, { password });
 
-// Lấy tất cả users (admin only)
-export const getAllUsers = (params = {}) => 
-  axios.get("/user/admin/users", { params });
+// Admin User Management APIs
+export const getAllUsers = (params = {}) => axios({
+  url: '/user/admin/users',
+  method: 'get',
+  params
+});
 
-// Lấy user theo ID (admin only)
-export const getUserById = (userId) => 
-  axios.get(`/user/admin/${userId}`);
+export const getUserById = (userId) => axios({
+  url: `/user/admin/${userId}`,
+  method: 'get'
+});
 
-// Tạo user mới (admin only)
-export const createUser = (userData) => 
-  axios.post("/user/admin/create", userData);
+export const createUser = (userData) => axios({
+  url: '/user/admin/create',
+  method: 'post',
+  data: userData
+});
 
-// Cập nhật user (admin only)
-export const updateUser = (userId, userData) => 
-  axios.put(`/user/admin/${userId}`, userData);
+export const updateUser = (userId, userData) => axios({
+  url: `/user/admin/${userId}`,
+  method: 'put',
+  data: userData
+});
 
-// Xóa user (admin only)
-export const deleteUser = (userId) => 
-  axios.delete(`/user/admin/${userId}`);
+export const deleteUser = (userId) => axios({
+  url: `/user/admin/${userId}`,
+  method: 'delete'
+});
 
-// Block/Unblock user (admin only)
-export const toggleBlockUser = (userId) => 
-  axios.put(`/user/admin/${userId}/toggle-block`);
+export const toggleBlockUser = (userId) => axios({
+  url: `/user/admin/${userId}/toggle-block`,
+  method: 'put'
+});

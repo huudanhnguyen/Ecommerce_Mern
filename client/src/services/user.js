@@ -30,8 +30,10 @@ export const apiGetCart = () => axios.get("/user/cart");
 
 // Thêm sản phẩm vào giỏ hàng
 // data = { productId, quantity, variants }
-export const apiAddToCart = ({ productId, quantity = 1, variants = {} }) =>
-  axios.post("/user/cart", { productId, quantity, variants });
+export const apiAddToCart = ({ productId, quantity = 1, variants = {} }) => {
+  console.log("apiAddToCart called with:", { productId, quantity, variants });
+  return axios.post("/user/cart", { productId, quantity, variants });
+};
 
 // Cập nhật số lượng sản phẩm trong giỏ
 // data = { productId, quantity, variants }
@@ -58,7 +60,7 @@ export const apiGetWishlist = () => axios.get("/user/wishlist");
 
 // Thêm sản phẩm vào wishlist
 export const apiAddToWishlist = (productId) =>
-  axios.post("/user/wishlist", { productId });
+  axios.post("/user/wishlist/add", { productId });
 
 // Xóa sản phẩm khỏi wishlist
 export const apiRemoveFromWishlist = (productId) =>
@@ -66,7 +68,7 @@ export const apiRemoveFromWishlist = (productId) =>
 
 // ✅ Toggle wishlist (add/remove)
 export const apiToggleWishlist = (productId) =>
-  axios.post("/user/toggle-wishlist", { productId });
+  axios.post("/user/wishlist", { productId });
 
 // ================== ADMIN USER MANAGEMENT ==================
 

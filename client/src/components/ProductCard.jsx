@@ -1,9 +1,13 @@
 import React from "react";
 import { formatPrice, renderRatingStars } from "../utils/helpers.jsx";
-import { FaHeart } from "react-icons/fa";
+import { FaHeart, FaShoppingCart } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import path from "../utils/path";
 import { useWishlistActions } from "../hooks/useWishlistActions";
+import { useCart } from "../context/CartContext";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import RatingSummary from "./RatingSummary.jsx";
 
 const ProductCard = ({ productData }) => {
@@ -19,6 +23,28 @@ const ProductCard = ({ productData }) => {
 
   // ✅ Dùng hook chung
   const { exists, handleToggle } = useWishlistActions(productData._id);
+  const { addToCart } = useCart();
+  const isLoggedIn = useSelector((state) => state.user.isLoggedIn);
+  const navigate = useNavigate();
+
+  const handleAddToCart = async () => {
+    if (!isLoggedIn) {
+      toast.warn("Please log in to add items to cart!", {
+        position: "top-center",
+        autoClose: 2000,
+      });
+      navigate("/login");
+      return;
+    }
+
+    try {
+      await addToCart(productData, 1, {});
+      toast.success("🛒 Added to cart!", { position: "top-left" });
+    } catch (err) {
+      console.error("Add to cart failed:", err);
+      toast.error("Failed to add to cart!");
+    }
+  };
 
   return (
     <div className="w-full flex items-center gap-4 p-2 border hover:shadow-lg rounded-md transition-shadow group relative">
@@ -66,6 +92,12 @@ const ProductCard = ({ productData }) => {
             }`}
           >
             <FaHeart />
+          </button>
+          <button
+            onClick={handleAddToCart}
+            className="p-2 rounded-full transition-all bg-gray-100 text-gray-700 hover:bg-main hover:text-white"
+          >
+            <FaShoppingCart />
           </button>
         </div>
       </div>

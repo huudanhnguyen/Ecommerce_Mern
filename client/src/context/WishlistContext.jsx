@@ -1,35 +1,45 @@
 // src/context/WishlistContext.jsx
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 import {
   apiGetWishlist,
   apiAddToWishlist,
   apiRemoveFromWishlist,
-} from "../apis/user";
+} from "../services/user";
 
 const WishlistContext = createContext();
 
 export const WishlistProvider = ({ children }) => {
   const [wishlistItems, setWishlistItems] = useState([]);
+  const isLoggedIn = useSelector((state) => state.user.isLoggedIn);
 
-  // Load wishlist khi app mount
+  // Load wishlist khi app mount hoặc khi login
   useEffect(() => {
     const fetchWishlist = async () => {
       try {
-        const res = await apiGetWishlist();
-        if (res.data?.success) {
-          setWishlistItems(res.data.wishlist);
+        if (isLoggedIn) {
+          const res = await apiGetWishlist();
+          if (res.data?.success) {
+            setWishlistItems(res.data.wishlist);
+          }
+        } else {
+          // Khi logout thì clear wishlist
+          setWishlistItems([]);
         }
       } catch (err) {
         console.error("Fetch wishlist failed:", err);
       }
     };
     fetchWishlist();
-  }, []);
+  }, [isLoggedIn]);
 
   // ✅ Toggle wishlist bằng add/remove
   const toggleWishlist = async (productId) => {
     try {
-      if (wishlistItems.includes(productId)) {
+      // Kiểm tra xem product có trong wishlist không (so sánh với _id)
+      const isInWishlist = wishlistItems.some(item => item._id === productId);
+      
+      if (isInWishlist) {
         // Đang có => remove
         const res = await apiRemoveFromWishlist(productId);
         if (res.data?.success) {

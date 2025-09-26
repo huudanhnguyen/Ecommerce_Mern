@@ -4,10 +4,18 @@ import React, { useState, useEffect } from "react";
 import { FaTimes, FaMinus, FaPlus } from "react-icons/fa";
 import Slider from "react-slick";
 import { formatPrice } from "../utils/helpers";
+import { useCart } from "../context/CartContext";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const QuickViewModal = ({ product, onClose }) => {
   // State để quản lý ảnh chính đang được hiển thị
   const [mainImage, setMainImage] = useState("");
+  const [quantity, setQuantity] = useState(1);
+  const { addToCart } = useCart();
+  const isLoggedIn = useSelector((state) => state.user.isLoggedIn);
+  const navigate = useNavigate();
 
   // Khi sản phẩm thay đổi, cập nhật ảnh chính mặc định là ảnh thumb
   useEffect(() => {
@@ -22,6 +30,26 @@ const QuickViewModal = ({ product, onClose }) => {
   if (!product) return null;
 
   const handleModalContentClick = (e) => e.stopPropagation();
+
+  const handleAddToCart = async () => {
+    if (!isLoggedIn) {
+      toast.warn("Please log in to add items to cart!", {
+        position: "top-center",
+        autoClose: 2000,
+      });
+      navigate("/login");
+      return;
+    }
+
+    try {
+      await addToCart(product, quantity, {});
+      toast.success("🛒 Added to cart!", { position: "top-left" });
+      onClose(); // Đóng modal sau khi thêm thành công
+    } catch (err) {
+      console.error("Add to cart failed:", err);
+      toast.error("Failed to add to cart!");
+    }
+  };
 
   const thumbnailSliderSettings = {
     slidesToShow: 5, // Hiển thị 5 ảnh thu nhỏ cùng lúc
@@ -107,13 +135,19 @@ const QuickViewModal = ({ product, onClose }) => {
             <div className="flex items-center gap-4 mb-4">
               <span className="font-semibold text-gray-700">Quantity</span>
               <div className="flex items-center border rounded">
-                <button className="w-10 h-10 flex items-center justify-center text-lg">
+                <button 
+                  className="w-10 h-10 flex items-center justify-center text-lg hover:bg-gray-100"
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                >
                   <FaMinus />
                 </button>
                 <span className="w-12 h-10 flex items-center justify-center text-lg border-l border-r">
-                  1
+                  {quantity}
                 </span>
-                <button className="w-10 h-10 flex items-center justify-center text-lg">
+                <button 
+                  className="w-10 h-10 flex items-center justify-center text-lg hover:bg-gray-100"
+                  onClick={() => setQuantity(quantity + 1)}
+                >
                   <FaPlus />
                 </button>
               </div>
@@ -132,7 +166,10 @@ const QuickViewModal = ({ product, onClose }) => {
                 </div>
               ))}
             </div>
-            <button className="w-full bg-main text-white font-bold py-3 rounded-md hover:bg-red-700 transition-colors uppercase">
+            <button 
+              onClick={handleAddToCart}
+              className="w-full bg-main text-white font-bold py-3 rounded-md hover:bg-red-700 transition-colors uppercase"
+            >
               Add To Cart
             </button>
           </div>

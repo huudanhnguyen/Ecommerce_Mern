@@ -10,7 +10,7 @@ export const useWishlistActions = (productId) => {
   const navigate = useNavigate();
 
   // Kiểm tra sản phẩm có trong wishlist chưa
-  const exists = wishlistItems.includes(productId);
+  const exists = wishlistItems.some(item => item._id === productId);
 
   // Hàm toggle
   const handleToggle = async () => {

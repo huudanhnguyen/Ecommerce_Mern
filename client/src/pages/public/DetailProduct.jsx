@@ -144,12 +144,7 @@ const DetailProduct = () => {
           await removeFromWishlist(product._id);
           toast.info("❌ Removed from favorites list");
         } else {
-          await toggleWishlist({
-            _id: product._id,
-            title: product.title,
-            price: product.price,
-            thumb: product.thumb,
-          });
+          await toggleWishlist(product._id);
           toast.success("❤️ Added to favorites list");
         }
       } catch (err) {

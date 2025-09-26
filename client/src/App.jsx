@@ -15,7 +15,7 @@ import OurServices from "./pages/public/OurServices";
 import ForgotPassword from "./pages/public/ForgotPassword";
 import ResetPassword from "./pages/public/ResetPassword";
 import SearchResult from "./pages/public/SearchResult";
-import MyAccount from "./pages/member/MyAccount";
+import MyAccount from "./pages/private/MyAccount";
 import Profile from "./pages/member/Profile";
 import Orders from "./pages/member/Orders";
 import CartPage from "./pages/public/CartPage";
