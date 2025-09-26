@@ -80,14 +80,26 @@ var userSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    city: {
+      type: String,
+      default: null,
+    },
+    state: {
+      type: String,
+      default: null,
+    },
+    zipcode: {
+      type: String,
+      default: null,
+    },
   },
   {
     timestamps: true, // Automatically add createdAt and updatedAt fields
   }
 );
 userSchema.pre("save", async function (next) {
-  if (this.isModified("password")) {
-    // Hash the password before saving
+  if (this.isModified("password") && !this.isNew) {
+    // Hash the password before saving (only if it's not already hashed)
     this.password = await bcrypt.hash(this.password, 10);
   }
   next();

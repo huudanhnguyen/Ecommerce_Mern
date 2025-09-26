@@ -8,7 +8,7 @@ const cors = require('cors'); // Middleware for enabling CORS
 
 const app = express();
 app.use(cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173', // Allow requests from the client URL
+    origin: ['http://localhost:5172', 'http://localhost:5173', 'http://localhost:5174'], // Allow requests from all client URLs
     credentials: true, // Allow credentials (cookies, authorization headers, etc.)
     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed HTTP methods
     allowedHeaders: ['Content-Type', 'Authorization'] // Allowed headers
@@ -17,6 +17,12 @@ app.set('query parser', 'extended');
 app.use(express.json()); // Middleware to parse JSON data
 app.use(express.urlencoded({ extended: true })); // Middleware to parse JSON and URL-encoded data
 app.use(cookieParser());
+
+// Logging middleware
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  next();
+});
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static('uploads'));

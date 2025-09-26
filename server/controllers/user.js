@@ -362,11 +362,19 @@ const updateUserbyAdmin = asyncHandler(async (req, res) => {
 
 // Helper to populate and return cart
 const getPopulatedCartForUser = async (userId) => {
-  const userPop = await User.findById(userId).populate(
-    "cart.productId",
-    "title price thumb"
-  );
-  return userPop.cart;
+  try {
+    const userPop = await User.findById(userId).populate(
+      "cart.productId",
+      "title price thumb slug"
+    );
+    if (!userPop) {
+      throw new Error("User not found");
+    }
+    return userPop.cart;
+  } catch (error) {
+    console.error("Error in getPopulatedCartForUser:", error);
+    throw error;
+  }
 };
 
 // Lấy giỏ hàng
@@ -424,6 +432,7 @@ const addToCart = async (req, res) => {
     return res.status(500).json({ success: false, msg: "Server error" });
   }
 };
+
 
 // Controller removeFromCart
 const removeFromCart = async (req, res) => {
@@ -552,16 +561,67 @@ const toggleWishlist = asyncHandler(async (req, res) => {
 
 // Lấy wishlist
 const getWishlist = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id).populate(
-    "wishlist",
-    "title price thumb slug"
-  );
+  try {
+    const user = await User.findById(req.user._id).populate(
+      "wishlist",
+      "title price thumb slug"
+    );
 
-  if (!user) {
-    return res.status(404).json({ success: false, message: "User not found" });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.json({ success: true, wishlist: user.wishlist });
+  } catch (error) {
+    console.error("Error in getWishlist:", error);
+    res.status(500).json({ success: false, message: "Server error", error: error.message });
   }
+});
 
-  res.json({ success: true, wishlist: user.wishlist });
+// Thêm product vào wishlist
+const addToWishlist = asyncHandler(async (req, res) => {
+  try {
+    console.log("Add to wishlist request:", req.body);
+    const { productId } = req.body;
+    const userId = req.user._id;
+
+    if (!productId) {
+      return res.status(400).json({ success: false, message: "Missing productId" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Kiểm tra xem product đã có trong wishlist chưa
+    const isAlreadyInWishlist = user.wishlist.includes(productId);
+    if (isAlreadyInWishlist) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Product already in wishlist" 
+      });
+    }
+
+    // Thêm product vào wishlist
+    user.wishlist.push(productId);
+    await user.save();
+
+    // Populate và trả về
+    const updatedUser = await User.findById(userId).populate(
+      "wishlist",
+      "title price thumb slug"
+    );
+
+    res.json({ success: true, wishlist: updatedUser.wishlist });
+  } catch (error) {
+    console.error("Add to wishlist error:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Server error",
+      error: error.message 
+    });
+  }
 });
 
 // Xóa hẳn 1 product khỏi wishlist
@@ -873,6 +933,7 @@ module.exports = {
   getCart,
   updateCart,
   getWishlist,
+  addToWishlist,
   removeFromWishlist,
   // Admin user management
   getAllUsersAdmin,

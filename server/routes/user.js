@@ -26,6 +26,7 @@ router.delete("/cart", verifyToken, ctrls.removeFromCart);
 
 // ================= WISHLIST =================
 router.post("/wishlist", verifyToken, ctrls.toggleWishlist);
+router.post("/wishlist/add", verifyToken, ctrls.addToWishlist);
 router.get("/wishlist", verifyToken, ctrls.getWishlist);
 router.delete("/wishlist", verifyToken, ctrls.removeFromWishlist);
 
