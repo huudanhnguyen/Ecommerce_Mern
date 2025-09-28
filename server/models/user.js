@@ -98,36 +98,40 @@ var userSchema = new mongoose.Schema(
   }
 );
 userSchema.pre("save", async function (next) {
-  if (this.isModified("password") && !this.isNew) {
-    // Hash the password before saving (only if it's not already hashed)
-    this.password = await bcrypt.hash(this.password, 10);
+  try {
+    if (this.isModified("password")) {
+      this.password = await bcrypt.hash(this.password, 10);
+    }
+    next();
+  } catch (err) {
+    next(err);
   }
-  next();
+});
+userSchema.pre("findOneAndUpdate", async function (next) {
+  try {
+    const update = this.getUpdate();
+    if (update && update.password) {
+      update.password = await bcrypt.hash(update.password, 10);
+      this.setUpdate(update);
+    }
+    next();
+  } catch (err) {
+    next(err);
+  }
 });
 userSchema.methods.comparePassword = async function (candidatePassword) {
   // Compare the candidate password with the hashed password
   return await bcrypt.compare(candidatePassword, this.password);
 };
 userSchema.methods.createPasswordResetToken = function () {
-  // 1. Tạo một token ngẫu nhiên
   const resetToken = crypto.randomBytes(32).toString("hex");
-
-  // 2. Hash token và lưu vào trường passwordResetToken trong DB
-  // Chúng ta chỉ lưu bản hash vào DB để bảo mật
-  this.passwordResetToken = crypto
-    .createHash("sha256")
-    .update(resetToken)
-    .digest("hex");
-
-  // 3. Đặt thời gian hết hạn cho token (ví dụ: 10 phút)
-  this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 phút * 60 giây * 1000ms
-
-  console.log({ resetToken }, this.passwordResetToken); // Dùng để debug
-
-  // 4. Trả về token gốc (chưa được hash)
-  // Token này sẽ được gửi cho người dùng qua email
+  this.passwordResetToken = crypto 
+  .createHash("sha256") 
+  .update(resetToken) 
+  .digest("hex"); 
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
   return resetToken;
-};
+}
 
 //Export the model
 module.exports = mongoose.model("User", userSchema);
