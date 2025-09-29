@@ -1,12 +1,16 @@
 const userRouter = require('./user');
 const productRouter = require('./product');
 const insertRouter = require('./insert');
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 const { notFound, errorHandler } = require('../middlewares/errHandler');
 
 const initRoutes = (app) => {
+    // Auth + User management
     app.use('/api/user', userRouter);
-    app.use('/api/user', require('./userProfile'));
+
+    // User profile (riêng biệt để tránh trùng route /:id)
+    app.use('/api/user/profile', require('./userProfile'));
+
     app.use('/api/product', productRouter);
     app.use('/api/product-categories', require('./productCategory'));
     app.use('/api/blog-categories', require('./blogCategory'));
@@ -18,9 +22,9 @@ const initRoutes = (app) => {
     app.use('/api/order', require('./order'));
     app.use('/api/cart', require('./cart'));
     app.use('/api/insert', insertRouter);
+
     app.use(notFound);
-        // Middleware xử lý lỗi tổng quát (phải đặt cuối cùng)
-    app.use(errorHandler); 
+    app.use(errorHandler); // Middleware xử lý lỗi cuối cùng
 };
 
 module.exports = initRoutes;

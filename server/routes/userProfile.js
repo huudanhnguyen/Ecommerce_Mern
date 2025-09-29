@@ -5,10 +5,10 @@ const { verifyToken } = require('../middlewares/verifyToken');
 const upload = require('../config/cloudinary.config');
 
 // Lấy thông tin user hiện tại
-router.get('/current', verifyToken, getCurrentUser);
+router.get('/', verifyToken, getCurrentUser);
 
 // Cập nhật thông tin user
-router.put('/update-profile', verifyToken, updateUserProfile);
+router.put('/update', verifyToken, updateUserProfile);
 
 // Đổi mật khẩu
 router.put('/change-password', verifyToken, changePassword);
@@ -17,9 +17,3 @@ router.put('/change-password', verifyToken, changePassword);
 router.post('/upload-avatar', verifyToken, upload.single('avatar'), uploadAvatar);
 
 module.exports = router;
-
-
-
-
-
-
