@@ -1,17 +1,12 @@
 import axios from '../axios';
 
 // Lấy thông tin user hiện tại
-export const getCurrentUser = () => axios({
-  url: '/user/current',
-  method: 'get'
-});
+export const getCurrentUser = () =>
+  axios.get("/user/profile");
 
 // Cập nhật thông tin user
-export const updateUserProfile = (data) => axios({
-  url: '/user/update-profile',
-  method: 'put',
-  data
-});
+export const updateUserProfile = (data) =>
+  axios.put("/user/profile/update", data);
 
 // Đổi mật khẩu
 export const changePassword = (data) => axios({
@@ -21,11 +16,15 @@ export const changePassword = (data) => axios({
 });
 
 // Upload avatar
-export const uploadAvatar = (data) => axios({
-  url: '/user/upload-avatar',
-  method: 'post',
-  data
-});
+export const uploadAvatar = (data) =>
+  axios({
+    url: '/user/profile/upload-avatar',
+    method: 'post',
+    data,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
 
 // Lấy lịch sử đơn hàng
 export const getUserOrders = (params) => axios({
